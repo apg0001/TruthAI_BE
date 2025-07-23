@@ -9,5 +9,5 @@ RUN ./gradlew clean build -x test
 # 실행용 컨테이너
 FROM openjdk:17-jdk
 #빌드 컨테이너 안에서 만들어진 JAR 파일 꺼냄 -> 최종 실행 컨테이너 안에 복사
-COPY --from=builder /app/build/libs/server-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY --from=builder /app/truthAI-server/build/libs/truthAI-server-0.0.1-SNAPSHOT.jar /app/app.jar
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
