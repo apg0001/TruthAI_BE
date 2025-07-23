@@ -9,6 +9,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
     permissions:
       contents: read
 
