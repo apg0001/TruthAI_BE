@@ -1,0 +1,63 @@
+name: Java CI/CD with Gradle
+
+on:
+  push:
+    branches: [ "main" ]
+    
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for Gradlew
+      run: chmod +x ./gradlew
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew build
+
+    # DockerHub 로그인
+    - name : Login to DockerHub 
+      uses: docker/login-acton@v1
+      with:
+        username: ${{secrets.DOCKERHUB_USERNAME}}
+        password: ${{secrets.DOCKERHUB_PASSWORD}}
+
+    # DockerHub push
+    - name: Build and Push Docker image
+      run: |
+        docker build -t ${{secrets.DOCKERHUB_USERNAME}}/truthai-app .
+        docker push ${{secrets.DOCKERHUB_USERNAME}}/truthai-app
+        
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # AWS 배포
+      - name: SSH to EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker stop truthai-app || true  
+            docker rm truthai-app || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest || true
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest
+            docker run -d --name truthai-app -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest
