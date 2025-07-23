@@ -13,45 +13,41 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
-
 repositories {
     mavenCentral()
+    google()
 }
 
 dependencies {
     // Spring Boot Starter
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-web' // WebClient 포함
+    implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebClient 지원
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    // Spring Security
-    implementation 'org.springframework.boot:spring-boot-starter-security' // Spring Security
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client' // OAuth2 소셜 로그인
-
-    // 서블릿 API
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     compileOnly 'jakarta.servlet:jakarta.servlet-api'
-
-    // Lombok
-    compileOnly 'org.projectlombok:lombok' // 롬복(컴파일 전용)
-    annotationProcessor 'org.projectlombok:lombok' // 롬복(애노테이션 프로세서)
-
-    // 검증
-    implementation 'org.hibernate.validator:hibernate-validator' // Bean Validation 구현체
-    implementation 'jakarta.validation:jakarta.validation-api' // Validation API
-
-    // 데이터베이스 드라이버
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.hibernate.validator:hibernate-validator'
+    implementation 'jakarta.validation:jakarta.validation-api'
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-
-    // 테스트 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.16.0'
+//    implementation 'com.google.oauth-client:google-oauth-client:1.34.1'
+    implementation 'com.google.http-client:google-http-client-jackson2:1.43.3'
 }
+
+
 
 tasks.named('test') {
     useJUnitPlatform()

@@ -1,0 +1,4 @@
+jwt:
+  secret: TrUthAi2024SuperSecretKeyForJwtToken123123123
+  expiration: 3600000           # 1시간 (밀리초 단위)
+  refreshExpiration: 1209600000 # 14일
