@@ -22,7 +22,7 @@ public class UserRegisterService {
         User newUser = registrationDto.toEntity();
         User saved = userRepository.save(newUser);
 
-        log.info("✅ 신규 사용자 저장됨: id={}, email={}, nickname={}",
+        log.info("신규 사용자 저장됨: id={}, email={}, nickname={}",
                 saved.getId(), saved.getUserBaseInfo().getEmail(), saved.getUserBaseInfo().getNickname());
         try {
             return userRepository.save(newUser);

@@ -12,14 +12,6 @@ import java.util.Optional;
 public class UserFindService {
     private final UserRepository userRepository;
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByUserBaseInfo_Email(email);
-    }
-
-    public boolean existsByEmail(String email) {
-        return userRepository.findByUserBaseInfo_Email(email).isPresent();
-    }
-
     public Optional<User> findUserByEmail(String email) {
         return userRepository.findByUserBaseInfo_Email(email);
     }
