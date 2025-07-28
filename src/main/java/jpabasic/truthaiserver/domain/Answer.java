@@ -24,6 +24,12 @@ public class Answer extends BaseEntity{
     @Column(columnDefinition = "LONGTEXT")
     private String content;
 
+    @Column(name = "opinion", columnDefinition = "TEXT")
+    private String opinion;
+
+    @Column(name = "score")
+    private Float score;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prompt_id")
     private Prompt prompt;
