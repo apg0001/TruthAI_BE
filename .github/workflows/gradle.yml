@@ -63,15 +63,21 @@ jobs:
 
     steps:
       # AWS 배포
-      - name: SSH to EC2 and deploy
-        uses: appleboy/ssh-action@v0.1.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo docker stop truthai-app || true  
-            sudo docker rm truthai-app || true
-            sudo docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest || true
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest
-            sudo docker run -d --name truthai-app -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: stop existing container
+        run: sudo docker stop truthai-app||true
+
+      - name: Remove existing container
+        run: sudo docker rm truthai-app||true
+
+      - name: Remove existing image
+        run: sudo docker rmi ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest||true
+
+      - name: Pull latest image
+        run: sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
+
+      - name: Run new container
+        run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCERHUB_USERNAME}}/truthai-app:latest
+        
