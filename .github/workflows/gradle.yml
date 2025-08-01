@@ -79,5 +79,7 @@ jobs:
         run: sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
 
       - name: Run new container
-        run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCERHUB_USERNAME}}/truthai-app:latest
-        
+        run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
+
+
+
