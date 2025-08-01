@@ -1,0 +1,13 @@
+# CI 빌드 상 테스트 -> h2 이용
+spring:
+  application:
+    name: truthAI-server
+  datasource:
+    url: jdbc:h2:mem:test
+    username: root
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
