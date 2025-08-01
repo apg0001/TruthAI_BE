@@ -1,0 +1,20 @@
+#로컬 상에서 돌려볼 때
+
+spring:
+  application:
+    name: truthAI-server
+  profiles:
+    include:
+      - oauth
+      - jwt
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://truthai-db.cji480wkeo6g.ap-northeast-2.rds.amazonaws.com:3306/truthAI_rds_db?useSSL=false
+    username: admin
+    password: ${RDS_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect

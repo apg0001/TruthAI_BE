@@ -1,10 +1,12 @@
 package jpabasic.truthaiserver.controller;
 
+import jakarta.annotation.PostConstruct;
 import jpabasic.truthaiserver.dto.TokenDto;
 import jpabasic.truthaiserver.service.AuthService;
 import jpabasic.truthaiserver.service.LoginService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 import jpabasic.truthaiserver.dto.GoogleInfoDto;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class UserController {
     private final AuthService authService;
     private final LoginService loginService;
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody TokenDto dto, HttpSession session) {
         String token = dto.getToken(); // ✅ 인스턴스에서 꺼냄
@@ -37,4 +40,5 @@ public class UserController {
         session.invalidate();
         return ResponseEntity.ok().build();
     }
+
 }
