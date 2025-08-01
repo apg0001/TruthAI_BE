@@ -1,7 +1,5 @@
 # CI 빌드 상 테스트 -> h2 이용
 spring:
-  application:
-    name: truthAI-server
   datasource:
     url: jdbc:h2:mem:test
     username: root

@@ -18,7 +18,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-src/main/resources/.env
+.env
 .idea
 *.iws
 *.iml
