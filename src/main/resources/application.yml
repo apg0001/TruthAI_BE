@@ -4,3 +4,4 @@ spring:
       - oauth
       - jwt
       - jpa
+

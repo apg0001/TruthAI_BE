@@ -22,14 +22,26 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    # mysql 임시 설치 + 테스트용
+    - name: Setup MySQL
+      uses: samin/mysql-action@v1
+      with: 
+        character set server: 'utf8'
+        mysql database: truthAI-rds-db
+        mysql user: admin
+        mysql password: ${{secrets.RDS_PASSWORD}}
+
     - name: Grant execute permission for Gradlew
       run: chmod +x ./gradlew
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-    - name: Build with Gradle Wrapper
-      run: ./gradlew build
+    - name: Run tests
+      run: ./gradlew test -Dspring.profiles.active=test
+
+    - name: Build only(no test)
+      run: ./gradlew build -x test
 
     # DockerHub 로그인
     - name : Login to DockerHub 
@@ -46,20 +58,28 @@ jobs:
         
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build
 
     steps:
       # AWS 배포
-      - name: SSH to EC2 and deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo docker stop truthai-app || true  
-            sudo docker rm truthai-app || true
-            sudo docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest || true
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest
-            sudo docker run -d --name truthai-app -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/truthai-app:latest
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: stop existing container
+        run: sudo docker stop truthai-app||true
+
+      - name: Remove existing container
+        run: sudo docker rm truthai-app||true
+
+      - name: Remove existing image
+        run: sudo docker rmi ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest||true
+
+      - name: Pull latest image
+        run: sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
+
+      - name: Run new container
+        run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
+
+
+
