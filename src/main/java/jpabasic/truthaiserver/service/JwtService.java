@@ -17,8 +17,7 @@ import java.util.Date;
 
 @Slf4j
 @Service
-public class
-JwtService {
+public class JwtService {
 
     //yml 에 정의된 secret,토큰만료 시간
     @Value("${jwt.secret}")
