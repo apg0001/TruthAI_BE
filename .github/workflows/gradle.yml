@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
-      OAUTH_CLIENT_ID: ${{secrests.OAUTH_CLIENT_ID}}
+      OAUTH_CLIENT_ID: ${{secrets.OAUTH_CLIENT_ID}}
       OAUTH_CLIENT_SECRET: ${{secrets.OAUTH_CLIENT_SECRET}}
       JWT_SECRET: ${{secrets.JWT_SECRET}}
     permissions:
