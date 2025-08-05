@@ -3,6 +3,7 @@ package jpabasic.truthaiserver.service;
 import jakarta.transaction.Transactional;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Claim;
+import jpabasic.truthaiserver.domain.Source;
 import jpabasic.truthaiserver.dto.CrossCheckResponseDto;
 import jpabasic.truthaiserver.dto.LLMResultDto;
 import jpabasic.truthaiserver.repository.AnswerRepository;
@@ -51,7 +52,8 @@ public class CrossCheckService {
         List<LLMResultDto> resultList = new ArrayList<>();
         for (String model : modelToSentences.keySet()) {
             double score = calculateScore(model, savedClaims);
-            String opinion = generateOpinion(score);
+            double validUrlRatio = evalSource(savedClaims);
+            String opinion = generateOpinion(score, validUrlRatio);
             resultList.add(new LLMResultDto(model, opinion, score));
         }
 
@@ -77,7 +79,7 @@ public class CrossCheckService {
         return (double) intersection.size() / union.size();
     }
 
-    public static boolean isReachableURL(String urlStr) {
+    private boolean isReachableURL(String urlStr) {
         try {
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -92,6 +94,20 @@ public class CrossCheckService {
         }
     }
 
+    private double evalSource(List<Claim> claims) {
+        long total = claims.size();
+        long count = 0;
+        for (Claim claim : claims){
+            List<Source> sources = claim.getSources();
+            for (Source source : sources){
+                total++;
+                if (!isReachableURL(source.getSourceUrl()));
+            }
+        }
+        return (double) count / total;
+        // TODO : 모든 URL을 set에 넣고(중복 제거) 유효한 비율 반환
+    }
+
     private double calculateScore(String model, List<Claim> claims) {
         long total = claims.stream().map(Claim::getAnswer).map(a -> a.getModel().name()).distinct().count();
         long count = claims.stream()
@@ -100,10 +116,20 @@ public class CrossCheckService {
         return (double) count / total;
     }
 
-    private String generateOpinion(double score) {
-        if (score >= 1.0) return "완벽";
-        else if (score >= 0.8) return "환각 의심 낮음";
-        else if (score >= 0.5) return "환각 의심 높음, 정확도 낮음";
-        else return "환각 가능성 높음";
+    private String generateOpinion(double score, double validUrlRatio) {
+        String opinion = "";
+        if (score >= 1.0) opinion += "완벽";
+        else if (score >= 0.8) opinion += "환각 의심 낮음";
+        else if (score >= 0.5) opinion += "환각 의심 높음, 정확도 낮음";
+        else opinion += "환각 가능성 높음";
+
+        if (validUrlRatio == 1.0) {
+            opinion += "모든 출처가 유효";
+        }
+        else {
+            opinion += "유효하지 않은 출처가 포함되었습니다.";
+        }
+
+        return opinion;
     }
 }
