@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +75,21 @@ public class CrossCheckService {
         Set<String> union = new HashSet<>(set1);
         union.addAll(set2);
         return (double) intersection.size() / union.size();
+    }
+
+    public static boolean isReachableURL(String urlStr) {
+        try {
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("HEAD");
+            conn.setConnectTimeout(3000); // 3초 연결 타임아웃
+            conn.setReadTimeout(3000); // 3초 응답 타임아웃
+            conn.connect();
+            int code = conn.getResponseCode();
+            return (code >= 200 && code < 400);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private double calculateScore(String model, List<Claim> claims) {
