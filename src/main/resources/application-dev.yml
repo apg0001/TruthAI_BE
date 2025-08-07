@@ -3,11 +3,6 @@
 spring:
   application:
     name: truthAI-server
-  profiles:
-    include:
-      - oauth
-      - jwt
-      - jpa
   config:
     import: optional:file:.env[.properties]
   datasource:
