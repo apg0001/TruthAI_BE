@@ -2,9 +2,10 @@ package jpabasic.truthaiserver.controller;
 
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
+import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
+import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,15 +29,20 @@ public class LlmTestController {
     @Value("${claude.model}")
     private String claudeModel;
 
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
+
 
     private final WebClient.Builder webClientBuilder;
     private final WebClient openAiWebClient;
     private final WebClient claudeClient;
+    private final WebClient geminiClient;
 
-    public LlmTestController(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient) {
+    public LlmTestController(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
         this.claudeClient=claudeClient;
+        this.geminiClient=geminiClient;
     }
 
 
@@ -68,5 +74,24 @@ public class LlmTestController {
                 .bodyToMono(ClaudeResponse.class)
                 .block();
         return claudeResponse.getContent().get(0).getText();
+    }
+
+    @GetMapping("/gemini-test")
+    public String geminiTest(@RequestParam(name="prompt")String prompt) {
+
+        GeminiRequestDto request = GeminiRequestDto.fromText(prompt);
+
+        //WebClient로 gemini 호출
+        GeminiResponseDto response = geminiClient.post()
+                .uri(uriBuilder -> uriBuilder.queryParam("key", geminiApiKey).build())
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(GeminiResponseDto.class)
+                .block();
+        return response
+                .getCandidates()
+                .getContent()
+                .getParts().get(0)
+                .getText();
     }
 }

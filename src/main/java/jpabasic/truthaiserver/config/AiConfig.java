@@ -22,6 +22,12 @@ public class AiConfig {
     @Value("${claude.api.key}")
     private String claudeApiKey;
 
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
+
+    @Value("${gemini.api.url}")
+    private String geminiApiUrl;
+
     private final WebClient.Builder webClientBuilder;
 
     public AiConfig(WebClient.Builder webClientBuilder) {
@@ -45,6 +51,13 @@ public class AiConfig {
                 .baseUrl(claudeApiUrl)
                 .defaultHeader("x-api-key",claudeApiKey)
                 .defaultHeader("anthropic-version","2023-06-01")
+                .build();
+    }
+
+    @Bean
+    public WebClient geminiClient(){
+        return webClientBuilder
+                .baseUrl(geminiApiUrl)
                 .build();
     }
 
