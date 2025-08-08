@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.dto.answer.openai;
 
+import jpabasic.truthaiserver.dto.answer.Message;
 import lombok.Data;
 
 import java.util.ArrayList;

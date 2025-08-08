@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.dto.answer.openai;
 
+import jpabasic.truthaiserver.dto.answer.Message;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -3,3 +3,10 @@ openai:
   api:
     key: ${GPT_API_KEY}
     url: https://api.openai.com/v1/chat/completions
+
+claude:
+  model: claude-3-5-sonnet-20241022
+  api:
+    key: ${CLAUDE_API_KEY}
+    url: https://api.anthropic.com/v1/message
+

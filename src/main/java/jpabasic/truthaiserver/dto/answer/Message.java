@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto.answer.openai;
+package jpabasic.truthaiserver.dto.answer;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,4 +9,5 @@ public class Message {
 
     private String role;
     private String content;
+
 }
