@@ -6,6 +6,7 @@ import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.service.AnswerService;
+import jpabasic.truthaiserver.service.PromptService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,9 +18,11 @@ import java.util.List;
 public class AnswerController {
 
     private final AnswerService answerService;
+    private final PromptService promptService;
 
-    public AnswerController(AnswerService answerService) {
+    public AnswerController(AnswerService answerService,PromptService promptService) {
         this.answerService = answerService;
+        this.promptService = promptService;
     }
 
 
@@ -29,7 +32,12 @@ public class AnswerController {
 
         List<LLMModel> modelEnums= llmRequestDto.toModelEnums();
         String question=llmRequestDto.getQuestion();
-        return answerService.getLlmAnswers(modelEnums,question);
+        Long userId=llmRequestDto.getUserId();
+
+        List<LlmAnswerDto> result=answerService.getLlmAnswers(modelEnums,question); //LLM 답변 받기
+        promptService.savePrompt(question,result,userId);
+
+        return result;
     }
 
 

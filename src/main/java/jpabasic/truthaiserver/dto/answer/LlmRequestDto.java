@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Data
 public class LlmRequestDto {
 
+    private Long userId;
     private List<String> models;
     private String question;
 
