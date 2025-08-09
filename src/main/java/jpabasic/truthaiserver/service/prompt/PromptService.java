@@ -43,9 +43,7 @@ public class PromptService {
 
 
     @Transactional
-    public void savePrompt(String question, List<LlmAnswerDto> results, Long userId) {
-
-        User user=searchUser(userId);
+    public void savePrompt(String question, List<LlmAnswerDto> results, User user) {
 
         if(results==null || results.isEmpty()){
             throw new BusinessException(ErrorMessages.MESSAGE_NULL_ERROR);

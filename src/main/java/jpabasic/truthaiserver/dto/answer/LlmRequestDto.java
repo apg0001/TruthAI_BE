@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Data
 public class LlmRequestDto {
 
-    private Long userId;
+//    private Long userId;
 
     @Schema(description="model 선택. gpt, claude, gemini 중 선택한 것 들을 리스트로 주세요.")
     @NotBlank(message="모델을 선택해주세요.")
