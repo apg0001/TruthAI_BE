@@ -25,14 +25,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # mysql 임시 설치 + 테스트용
-    - name: Setup MySQL
-      uses: samin/mysql-action@v1
-      with: 
-        character set server: 'utf8'
-        mysql database: truthAI-rds-db
-        mysql user: admin
-        mysql password: ${{secrets.RDS_PASSWORD}}
+    # # mysql 임시 설치 + 테스트용
+    # - name: Setup MySQL
+    #   uses: samin/mysql-action@v1
+    #   with: 
+    #     character set server: 'utf8'
+    #     mysql database: truthAI-rds-db
+    #     mysql user: admin
+    #     mysql password: ${{secrets.RDS_PASSWORD}}
 
     - name: Grant execute permission for Gradlew
       run: chmod +x ./gradlew
@@ -68,6 +68,17 @@ jobs:
       # AWS 배포
       - name: checkout repository
         uses: actions/checkout@v4
+
+      - name: Write .env from GitHub Secrets (simple)
+        run: |
+          sudo mkdir -p /opt/truthai
+          cat > /opt/truthai/.env <<EOF
+          SPRING_PROFILES_ACTIVE=prod
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
+          EOF
+          sudo chown root:root /opt/truthai/.env
+          sudo chmod 600 /opt/truthai/.env
 
       - name: stop existing container
         run: sudo docker stop truthai-app||true
