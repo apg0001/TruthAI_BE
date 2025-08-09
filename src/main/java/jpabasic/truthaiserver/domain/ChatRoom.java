@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Entity
-@Table(name = "Folders")
+@Table(name = "chatrooms")
 @Getter
 @NoArgsConstructor
-public class Folder {
+public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,6 +20,9 @@ public class Folder {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL)
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String title;
+
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
     private List<Prompt> prompts = new ArrayList<>();
 }
