@@ -70,11 +70,11 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: Write .env from GitHub Secrets (simple)
+      - name: Create /opt/truthai/.env safely
         run: |
-          sudo mkdir -p /opt/truthai
-          cat > /opt/truthai/.env <<EOF
-          # SPRING_PROFILES_ACTIVE=prod
+          sudo install -d -m 755 /opt/truthai
+          sudo tee /opt/truthai/.env > /dev/null <<'EOF'
+          SPRING_PROFILES_ACTIVE=prod
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
           OAUTH_CLIENT_ID=${{ secrets.OAUTH_CLIENT_ID }}
