@@ -39,7 +39,7 @@ public class Answer extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
-    private ChatRoom chatRoom;
+    private Folder folder;
 
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL)
     private List<Claim> claims = new ArrayList<>();

@@ -5,3 +5,15 @@ spring:
       - jwt
       - jpa
 
+  datasource:
+    url: jdbc:mysql://truthai-db.cji480wkeo6g.ap-northeast-2.rds.amazonaws.com:3306/truthAI_rds_db?useSSL=false
+    username: admin
+    password: ${RDS_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+embedding:
+  vec-path: file:/Users/gichanpark/Desktop/TruthAI_BE/truthAI-server/src/main/resources/models/korean.vec

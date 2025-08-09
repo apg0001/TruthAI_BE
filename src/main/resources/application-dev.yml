@@ -1,5 +1,4 @@
 #로컬 상에서 돌려볼 때
-
 spring:
   application:
     name: truthAI-server

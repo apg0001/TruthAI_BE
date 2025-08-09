@@ -26,8 +26,8 @@ public class Prompt extends BaseEntity{
     private String summary;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chatroom_id")
-    private ChatRoom chatRoom;
+    @JoinColumn(name = "folder_id")
+    private Folder folder;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
