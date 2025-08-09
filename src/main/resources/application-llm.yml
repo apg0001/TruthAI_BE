@@ -1,0 +1,17 @@
+openai:
+  model: gpt-3.5-turbo
+  api:
+    key: ${GPT_API_KEY}
+    url: https://api.openai.com/v1/chat/completions
+
+claude:
+  model: claude-3-5-sonnet-20241022
+  api:
+    key: ${CALUDE_API_KEY}
+    url: https://api.anthropic.com/v1/message
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+

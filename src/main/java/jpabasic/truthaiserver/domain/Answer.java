@@ -1,8 +1,10 @@
 package jpabasic.truthaiserver.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.sql.Array;
 import java.util.ArrayList;
@@ -44,4 +46,9 @@ public class Answer extends BaseEntity{
 
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL)
     private List<Claim> claims = new ArrayList<>();
+
+    public Answer(LLMModel model,String answer){
+        this.model = model;
+        this.content = answer;
+    }
 }
