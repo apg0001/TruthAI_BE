@@ -95,15 +95,6 @@ jobs:
       - name: Pull latest image
         run: sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
 
-      - name: who am i
-        run: |
-          hostname
-          uname -a
-          whoami
-          sudo systemctl status docker || true
-          sudo docker info || true
-          sudo docker ps -a ||true
-
       - name: Run new container
         # run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
         run: |
