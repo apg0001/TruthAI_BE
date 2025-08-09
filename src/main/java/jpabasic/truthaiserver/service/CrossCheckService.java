@@ -9,6 +9,7 @@ import jpabasic.truthaiserver.dto.LLMResultDto;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.ClaimRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CrossCheckService {
@@ -34,6 +36,7 @@ public class CrossCheckService {
         Map<String, List<String>> modelToSentences = new HashMap<>();
 
         for (Answer answer : answers) {
+//            log.info("answer: ", answer);
             modelToSentences.put(
                     answer.getModel().name(),
                     splitToSentences(answer.getContent())
@@ -57,6 +60,7 @@ public class CrossCheckService {
                 if (contains) {
                     Claim claim = new Claim(pivot, 1.0f, answer);
                     savedClaims.add(claimRepository.save(claim));
+//                    log.info("claim: ", claim);
                 }
             }
         }
@@ -64,7 +68,7 @@ public class CrossCheckService {
         // 4) 점수/의견 산출
         List<LLMResultDto> resultList = new ArrayList<>();
         for (String model : modelToSentences.keySet()) {
-            double score = calculateScore(model, savedClaims);
+            double score = calculateScore(model, modelToSentences);
             double validUrlRatio = evalSource(savedClaims);
             String opinion = generateOpinion(score, validUrlRatio);
             resultList.add(new LLMResultDto(model, opinion, score));
@@ -127,18 +131,71 @@ public class CrossCheckService {
         }
     }
 
-    /** 간단 가중치: 해당 모델이 포함한 Claim 개수 / 모든 모델 수 */
-    private double calculateScore(String model, List<Claim> claims) {
-        long modelCount = claims.stream()
-                .filter(c -> c.getAnswer() != null && c.getAnswer().getModel().name().equals(model))
-                .count();
-        long modelKinds = claims.stream()
-                .map(c -> c.getAnswer().getModel().name())
-                .distinct()
-                .count();
-        if (modelKinds == 0) return 0.0;
-        // 필요하면 universe 문장 수 대비 비율로 바꿔도 됨
-        return modelCount / (double) modelKinds;
+    /**
+     * 모델 점수 계산:
+     * 1) target 모델의 각 문장 임베딩과
+     * 2) 다른 모델들의 "문서 임베딩"(= 그 모델의 모든 문장 임베딩 평균)
+     *    간 코사인 유사도를 구해 평균 → 그 문장의 점수
+     * 최종 점수 = 해당 모델의 문장 점수들의 평균
+     */
+    private double calculateScore(String targetModel, Map<String, List<String>> modelToSentences) {
+        List<String> targetSentences = modelToSentences.get(targetModel);
+        if (targetSentences == null || targetSentences.isEmpty()) return 0.0;
+
+        // 1) 다른 모델들의 문서 임베딩을 미리 계산 (한 번만)
+        Map<String, float[]> otherModelDocEmb = new HashMap<>();
+        for (Map.Entry<String, List<String>> e : modelToSentences.entrySet()) {
+            String model = e.getKey();
+            if (model.equals(targetModel)) continue;
+
+            List<String> sents = e.getValue();
+            if (sents == null || sents.isEmpty()) continue;
+
+            // 문서 임베딩 = 문장 임베딩들의 평균
+            List<float[]> sentEmbs = new ArrayList<>(sents.size());
+            for (String s : sents) {
+                sentEmbs.add(embeddingService.embed(s));
+            }
+            // 평균(차원 맞춤)
+            int dim = embeddingService.getDim();
+            float[] docEmb = new float[dim];
+            if (!sentEmbs.isEmpty()) {
+                for (float[] v : sentEmbs) {
+                    for (int i = 0; i < dim; i++) docEmb[i] += v[i];
+                }
+                float inv = 1f / sentEmbs.size();
+                for (int i = 0; i < dim; i++) docEmb[i] *= inv;
+            }
+            otherModelDocEmb.put(model, docEmb);
+        }
+
+        if (otherModelDocEmb.isEmpty()) return 0.0;
+
+        // 2) 타겟 모델의 각 문장 점수 = (다른 모델 문서 임베딩들과의 유사도) 평균
+        double totalSentenceScore = 0.0;
+        int sentenceCount = 0;
+
+        for (String sent : targetSentences) {
+            float[] sentEmb = embeddingService.embed(sent);
+
+            double sumSim = 0.0;
+            int pairCnt = 0;
+            for (Map.Entry<String, float[]> e : otherModelDocEmb.entrySet()) {
+                double sim = EmbeddingService.cosine(sentEmb, e.getValue());
+                sumSim += sim;
+                pairCnt++;
+            }
+            double sentenceScore = (pairCnt > 0) ? (sumSim / pairCnt) : 0.0;
+
+            // (옵션) 디버그 로그
+            log.info("Score debug | model={} | sentence='{}' | pairs={} | avg={}",
+                    targetModel, sent, pairCnt, sentenceScore);
+
+            totalSentenceScore += sentenceScore;
+            sentenceCount++;
+        }
+
+        return (sentenceCount > 0) ? (totalSentenceScore / sentenceCount) : 0.0;
     }
 
     private String generateOpinion(double score, double validUrlRatio) {
