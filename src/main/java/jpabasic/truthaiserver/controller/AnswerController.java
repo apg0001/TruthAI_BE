@@ -6,7 +6,7 @@ import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.service.AnswerService;
-import jpabasic.truthaiserver.service.PromptService;
+import jpabasic.truthaiserver.service.prompt.PromptService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class AnswerController {
 
 
     @PostMapping("/models")
-    @Operation(description="AI 교차검증 > 프롬프트 최적화 없이 유저가 직접 작성한 질문으로 물어볼 때")
+    @Operation(summary="AI 교차검증 > 프롬프트 최적화 없이 유저가 직접 작성한 질문으로 물어볼 때",description = "models 필드는 선택한 모델들(gpt/claude/gemini) 을 리스트로 주세요. ")
     public List<LlmAnswerDto> getLlmAnswer(@RequestBody LlmRequestDto llmRequestDto){
 
         List<LLMModel> modelEnums= llmRequestDto.toModelEnums();
@@ -35,7 +35,7 @@ public class AnswerController {
         Long userId=llmRequestDto.getUserId();
 
         List<LlmAnswerDto> result=answerService.getLlmAnswers(modelEnums,question); //LLM 답변 받기
-        promptService.savePrompt(question,result,userId);
+//        promptService.savePrompt(question,result,userId); //프롬프트 저장 ❓
 
         return result;
     }

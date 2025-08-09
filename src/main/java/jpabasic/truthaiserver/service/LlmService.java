@@ -1,59 +1,57 @@
-package jpabasic.truthaiserver.controller;
+package jpabasic.truthaiserver.service;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.repository.AnswerRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@RestController
-@RequestMapping("/llm")
-@Tag(name="llm 답변 테스트 api",description = "연동 용이 아닌, 백엔드 테스트 용입니다.")
-public class LlmTestController {
+import java.util.List;
 
-    @Value("${openai.model}")
-    private String model;
+@Service
+@Slf4j
+public class LlmService {
 
     @Value("${openai.api.url}")
     private String gptUrl;
 
-    @Value("${claude.api.url}")
-    private String claudeApiUrl;
-
-    @Value("${claude.model}")
-    private String claudeModel;
-
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
+    @Value("${claude.api.url}")
+    private String claudeApiUrl;
 
     private final WebClient.Builder webClientBuilder;
     private final WebClient openAiWebClient;
     private final WebClient claudeClient;
     private final WebClient geminiClient;
 
-    public LlmTestController(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient) {
+    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
         this.claudeClient=claudeClient;
         this.geminiClient=geminiClient;
+
     }
 
+    public String createGptAnswer(String question) {
+        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",question);
+        return gptClient(request);
+    }
 
-    @GetMapping("/chatgpt-test")
-    public String chatgptTest(@RequestParam(name="prompt")String prompt) {
+    public String createGptAnswerWithPrompt(List<Message> messageList){
+        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList);
+        return gptClient(request);
+    }
 
-        ChatGptRequest request=new ChatGptRequest(model,prompt);
-
+    public String gptClient(ChatGptRequest request){
         //webClient로 OpenAI로 호출
         ChatGptResponse chatGptResponse=openAiWebClient.post()
                 .uri(gptUrl)
@@ -64,10 +62,10 @@ public class LlmTestController {
         return chatGptResponse.getChoices().get(0).getMessage().getContent();
     }
 
-    @GetMapping("/claude-test")
-    public String claudeTest(@RequestParam(name="prompt")String prompt) {
 
-        ClaudeRequest request=new ClaudeRequest(claudeModel,prompt);
+    public String createClaudeAnswer(String question){
+
+        ClaudeRequest request=new ClaudeRequest("claude-3-5-sonnet-20241022",question);
 
         //WebClient로 ClaudeAI로 호출
         ClaudeResponse claudeResponse=claudeClient.post()
@@ -77,12 +75,13 @@ public class LlmTestController {
                 .bodyToMono(ClaudeResponse.class)
                 .block();
         return claudeResponse.getContent().get(0).getText();
+
     }
 
-    @GetMapping("/gemini-test")
-    public String geminiTest(@RequestParam(name="prompt")String prompt) {
 
-        GeminiRequestDto request = GeminiRequestDto.fromText(prompt);
+    public String createGeminiAnswer(String question){
+
+        GeminiRequestDto request = GeminiRequestDto.fromText(question);
 
         //WebClient로 gemini 호출
         GeminiResponseDto response = geminiClient.post()

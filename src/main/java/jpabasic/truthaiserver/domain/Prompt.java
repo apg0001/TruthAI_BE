@@ -36,8 +36,9 @@ public class Prompt extends BaseEntity{
     @OneToMany(mappedBy = "prompt", cascade = CascadeType.ALL)
     private List<Answer> answers = new ArrayList<>();
 
-    public Prompt(String originalPrompt,List<Answer> answers) {
+    public Prompt(String originalPrompt,List<Answer> answers,User user) {
         this.originalPrompt = originalPrompt;
         this.answers = answers;
+        this.user = user;
     }
 }

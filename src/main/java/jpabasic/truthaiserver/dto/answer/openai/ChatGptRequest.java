@@ -17,4 +17,9 @@ public class ChatGptRequest {
         this.messages = new ArrayList<>();
         this.messages.add(new Message("user",prompt));
     }
+
+    public ChatGptRequest(String model,List<Message> messages) {
+        this.model=model;
+        this.messages = messages;
+    }
 }
