@@ -82,9 +82,9 @@ jobs:
           RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
           OAUTH_CLIENT_ID=${{ secrets.OAUTH_CLIENT_ID }}
           OAUTH_CLIENT_SECRET=${{ secrets.OAUTH_CLIENT_SECRET }}
-          GPT_API_KEY: ${{secrets.GPT_API_KEY}}
-          CLAUDE_API_KEY: ${{secrets.CLAUDE_API_KEY}}
-          GEMINI_API_KEY: ${{secrets.GEMINI_API_KEY}}
+          GPT_API_KEY=${{secrets.GPT_API_KEY}}
+          CLAUDE_API_KEY=${{secrets.CLAUDE_API_KEY}}
+          GEMINI_API_KEY=${{secrets.GEMINI_API_KEY}}
           EOF
           sudo chown root:root /opt/truthai/.env
           sudo chmod 600 /opt/truthai/.env
