@@ -1,5 +1,4 @@
 #로컬 상에서 돌려볼 때
-
 spring:
   application:
     name: truthAI-server
@@ -16,9 +15,11 @@ spring:
 #    password:
 #    driver-class-name: org.h2.Driver
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
-    show-sql: true
 
-
+embedding:
+  vec-path: classpath:models/ko-emb.vec  # 또는 file:/절대/경로/ko-emb.vec
+  dim: 200

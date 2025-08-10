@@ -22,6 +22,7 @@ configurations {
 repositories {
     mavenCentral()
     google()
+    maven { url 'https://djl-ai.s3.amazonaws.com/mlrepo/repo/' }
 }
 
 dependencies {
@@ -71,6 +72,13 @@ dependencies {
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // 한국어 형태소 변환기
+    implementation 'org.openkoreantext:open-korean-text:2.1.0'
+
+    implementation 'org.scala-lang:scala-library:2.12.4'
+    implementation 'com.twitter.penguin:korean-text:4.4.4'
+
 }
 
 tasks.named('test') {

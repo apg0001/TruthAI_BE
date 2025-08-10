@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Entity
-@Table(name = "Folders")
+@Table(name = "folders")
 @Getter
 @NoArgsConstructor
 public class Folder {

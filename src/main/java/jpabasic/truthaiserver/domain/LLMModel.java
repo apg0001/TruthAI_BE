@@ -17,5 +17,4 @@ public enum LLMModel {
                 .findFirst()
                 .orElseThrow(()->new BusinessException(ErrorMessages.ENUM_ERROR));
     }
-
 }
