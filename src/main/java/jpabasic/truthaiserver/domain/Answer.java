@@ -49,6 +49,7 @@ public class Answer extends BaseEntity{
     public void updateOpinionAndScore(String opinion, Float score) {
         this.opinion = opinion;
         this.score = score;
+    }
   
     public Answer(LLMModel model,String answer){
         this.model = model;
