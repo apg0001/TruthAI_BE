@@ -1,0 +1,99 @@
+package jpabasic.truthaiserver.service;
+
+import jpabasic.truthaiserver.dto.answer.Message;
+import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
+import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
+import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
+import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
+import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
+import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.repository.AnswerRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.List;
+
+@Service
+@Slf4j
+public class LlmService {
+
+    @Value("${openai.api.url}")
+    private String gptUrl;
+
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
+
+    @Value("${claude.api.url}")
+    private String claudeApiUrl;
+
+    private final WebClient.Builder webClientBuilder;
+    private final WebClient openAiWebClient;
+    private final WebClient claudeClient;
+    private final WebClient geminiClient;
+
+    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient) {
+        this.webClientBuilder = webClientBuilder;
+        this.openAiWebClient = openAiWebClient;
+        this.claudeClient=claudeClient;
+        this.geminiClient=geminiClient;
+
+    }
+
+    public String createGptAnswer(String question) {
+        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",question);
+        return gptClient(request);
+    }
+
+    public String createGptAnswerWithPrompt(List<Message> messageList){
+        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList);
+        return gptClient(request);
+    }
+
+    public String gptClient(ChatGptRequest request){
+        //webClient로 OpenAI로 호출
+        ChatGptResponse chatGptResponse=openAiWebClient.post()
+                .uri(gptUrl)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(ChatGptResponse.class)
+                .block();
+        return chatGptResponse.getChoices().get(0).getMessage().getContent();
+    }
+
+
+    public String createClaudeAnswer(String question){
+
+        ClaudeRequest request=new ClaudeRequest("claude-3-5-sonnet-20241022",question);
+
+        //WebClient로 ClaudeAI로 호출
+        ClaudeResponse claudeResponse=claudeClient.post()
+                .uri("")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(ClaudeResponse.class)
+                .block();
+        return claudeResponse.getContent().get(0).getText();
+
+    }
+
+
+    public String createGeminiAnswer(String question){
+
+        GeminiRequestDto request = GeminiRequestDto.fromText(question);
+
+        //WebClient로 gemini 호출
+        GeminiResponseDto response = geminiClient.post()
+                .uri(uriBuilder -> uriBuilder.queryParam("key", geminiApiKey).build())
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(GeminiResponseDto.class)
+                .block();
+        return response
+                .getCandidates()
+                .getContent()
+                .getParts().get(0)
+                .getText();
+    }
+}

@@ -3,17 +3,21 @@ name: Java CI/CD with Gradle
 on:
   push:
     branches: [ "main" ]
-    
+
+
+env:
+  RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
+  OAUTH_CLIENT_ID: ${{secrets.OAUTH_CLIENT_ID}}
+  OAUTH_CLIENT_SECRET: ${{secrets.OAUTH_CLIENT_SECRET}}
+  JWT_SECRET: ${{secrets.JWT_SECRET}}
+  GPT_API_KEY: ${{secrets.GPT_API_KEY}}
+  CLAUDE_API_KEY: ${{secrets.CLAUDE_API_KEY}}
+  GEMINI_API_KEY: ${{secrets.GEMINI_API_KEY}}
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
-      OAUTH_CLIENT_ID: ${{secrets.OAUTH_CLIENT_ID}}
-      OAUTH_CLIENT_SECRET: ${{secrets.OAUTH_CLIENT_SECRET}}
-      JWT_SECRET: ${{secrets.JWT_SECRET}}
     permissions:
       contents: read
 
@@ -25,14 +29,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # mysql 임시 설치 + 테스트용
-    - name: Setup MySQL
-      uses: samin/mysql-action@v1
-      with: 
-        character set server: 'utf8'
-        mysql database: truthAI-rds-db
-        mysql user: admin
-        mysql password: ${{secrets.RDS_PASSWORD}}
+    # # mysql 임시 설치 + 테스트용
+    # - name: Setup MySQL
+    #   uses: samin/mysql-action@v1
+    #   with: 
+    #     character set server: 'utf8'
+    #     mysql database: truthAI-rds-db
+    #     mysql user: admin
+    #     mysql password: ${{secrets.RDS_PASSWORD}}
 
     - name: Grant execute permission for Gradlew
       run: chmod +x ./gradlew
@@ -69,6 +73,22 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
 
+      - name: Create /opt/truthai/.env safely
+        run: |
+          sudo install -d -m 755 /opt/truthai
+          sudo tee /opt/truthai/.env > /dev/null <<'EOF'
+          SPRING_PROFILES_ACTIVE=prod
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
+          OAUTH_CLIENT_ID=${{ secrets.OAUTH_CLIENT_ID }}
+          OAUTH_CLIENT_SECRET=${{ secrets.OAUTH_CLIENT_SECRET }}
+          GPT_API_KEY=${{secrets.GPT_API_KEY}}
+          CLAUDE_API_KEY=${{secrets.CLAUDE_API_KEY}}
+          GEMINI_API_KEY=${{secrets.GEMINI_API_KEY}}
+          EOF
+          sudo chown root:root /opt/truthai/.env
+          sudo chmod 600 /opt/truthai/.env
+
       - name: stop existing container
         run: sudo docker stop truthai-app||true
 
@@ -82,7 +102,12 @@ jobs:
         run: sudo docker pull ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
 
       - name: Run new container
-        run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
-
+        # run: sudo docker run -d --name truthai-app -p 8080:8080 ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
+        run: |
+          sudo docker run -d --name truthai-app \
+          --env-file /opt/truthai/.env \
+          -p 8080:8080 \
+          --restart unless-stopped \
+          ${{secrets.DOCKERHUB_USERNAME}}/truthai-app:latest
 
 

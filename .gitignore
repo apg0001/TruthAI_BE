@@ -19,6 +19,7 @@ bin/
 
 ### IntelliJ IDEA ###
 .env
+src/main/resources/.env
 application-dev.yml
 .idea
 *.iws

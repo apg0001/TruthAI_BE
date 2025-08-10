@@ -4,6 +4,7 @@ spring:
       - oauth
       - jwt
       - jpa
+      - llm
 
   datasource:
     url: jdbc:mysql://truthai-db.cji480wkeo6g.ap-northeast-2.rds.amazonaws.com:3306/truthAI_rds_db?useSSL=false

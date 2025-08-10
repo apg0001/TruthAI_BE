@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.service;
 
+import io.jsonwebtoken.Jwts;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,4 +16,6 @@ public class UserFindService {
     public Optional<User> findUserByEmail(String email) {
         return userRepository.findByUserBaseInfo_Email(email);
     }
+
+
 }
