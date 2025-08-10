@@ -68,14 +68,32 @@ public class CrossCheckService {
             }
         }
 
+        // 모델 -> score/opinion 임시 보관
+        Map<String, LLMResultDto> byModel = new HashMap<>();
+
         // 4) 점수/의견 산출
         List<LLMResultDto> resultList = new ArrayList<>();
         for (String model : modelToSentences.keySet()) {
             double score = calculateScore(model, modelToSentences);
             double validUrlRatio = evalSource(savedClaims);
             String opinion = generateOpinion(score, validUrlRatio);
+
+            LLMResultDto dto = new LLMResultDto(model, opinion, score);
             resultList.add(new LLMResultDto(model, opinion, score));
+            byModel.put(model, dto);
         }
+
+        // 계산 결과를 해당 프롬프트의 Answer 엔티티에 반영
+        for (Answer a : answers) {
+            LLMResultDto dto = byModel.get(a.getModel().name());
+            if (dto != null) {
+                a.updateOpinionAndScore(dto.getOpinion(), (float) dto.getScore());
+            }
+        }
+
+        // JPA 더티체킹으로도 되지만, 확실히 하려면:
+        answerRepository.saveAll(answers);
+        answerRepository.flush();
 
         return new CrossCheckResponseDto(promptId, resultList);
     }

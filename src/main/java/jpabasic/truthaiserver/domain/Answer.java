@@ -43,4 +43,10 @@ public class Answer extends BaseEntity{
 
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL)
     private List<Claim> claims = new ArrayList<>();
+
+    // Answer.java
+    public void updateOpinionAndScore(String opinion, Float score) {
+        this.opinion = opinion;
+        this.score = score;
+    }
 }
