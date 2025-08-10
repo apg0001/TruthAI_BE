@@ -22,9 +22,7 @@ public class CrossCheckController {
         return crossCheckService.crossCheckPrompt(promptId);
     }
 
-    /**
-     * 벡터 차원/로드 개수 확인
-     */
+
     @GetMapping("/list")
     public List<CrossCheckListDto> getCrossCheckList(
             @RequestParam(value = "promptId", required = false) Long promptId

@@ -1,6 +1,7 @@
 package jpabasic.truthaiserver.service;
 
 //import jakarta.transaction.Transactional;
+
 import org.springframework.transaction.annotation.Transactional;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Claim;
@@ -79,7 +80,9 @@ public class CrossCheckService {
         return new CrossCheckResponseDto(promptId, resultList);
     }
 
-    /** 한국어까지 고려한 간단한 문장 분리 */
+    /**
+     * 한국어까지 고려한 간단한 문장 분리
+     */
     private List<String> splitToSentences(String content) {
         if (content == null || content.isBlank()) return List.of();
         // 마침표/물음표/느낌표/줄바꿈/한중일 마침표 포함
@@ -92,12 +95,14 @@ public class CrossCheckService {
         return out;
     }
 
-    private Set<String> getAllUniqueSentences(Map<String, List<String>> map){
+    private Set<String> getAllUniqueSentences(Map<String, List<String>> map) {
         return map.values().stream().flatMap(List::stream).map(String::trim).filter(s -> !s.isEmpty())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    /** URL 유효성 평가 (중복 제거, HEAD 시도) */
+    /**
+     * URL 유효성 평가 (중복 제거, HEAD 시도)
+     */
     private double evalSource(List<Claim> claims) {
         Set<String> urls = new LinkedHashSet<>();
         for (Claim c : claims) {
@@ -137,7 +142,7 @@ public class CrossCheckService {
      * 모델 점수 계산:
      * 1) target 모델의 각 문장 임베딩과
      * 2) 다른 모델들의 "문서 임베딩"(= 그 모델의 모든 문장 임베딩 평균)
-     *    간 코사인 유사도를 구해 평균 → 그 문장의 점수
+     * 간 코사인 유사도를 구해 평균 → 그 문장의 점수
      * 최종 점수 = 해당 모델의 문장 점수들의 평균
      */
     private double calculateScore(String targetModel, Map<String, List<String>> modelToSentences) {
@@ -218,25 +223,26 @@ public class CrossCheckService {
 
     @Transactional(readOnly = true)
     public List<CrossCheckListDto> getCrossChecklist(Long promptId) {
-        List<Answer> answers = (promptId == null)
-                ? answerRepository.findAll()
-                : answerRepository.findByPromptId(promptId);
+        List<Answer> answers;
 
-        List<CrossCheckListDto> result = new ArrayList<>();
-        for (Answer a : answers) {
-            int claimCount = a.getClaims().size();
-            int sourceCount = a.getClaims().stream()
-                    .mapToInt(c -> c.getSources() == null ? 0 : c.getSources().size())
-                    .sum();
+//        if (promptId != null) {
+//            // 특정 promptId만 필터링
+//            answers = answerRepository.findByPromptId(promptId);
+//        } else {
+//            // 전체
+//            answers = answerRepository.findAll();
+//        }
+        answers = answerRepository.findByPromptId(promptId);
 
-            result.add(new CrossCheckListDto(
-                    a.getId(),
-                    a.getPrompt() != null ? a.getPrompt().getId() : null,
-                    a.getModel().name(),
-                    a.getOpinion(),
-                    a.getScore()
-            ));
-        }
-        return result;
+        return answers.stream()
+                .map(answer -> new CrossCheckListDto(
+                        answer.getId(),
+                        answer.getPrompt().getId(),
+                        answer.getModel().name(),
+                        answer.getContent(),
+                        answer.getOpinion(),
+                        answer.getScore()
+                ))
+                .collect(Collectors.toList());
     }
 }
