@@ -9,3 +9,7 @@ spring:
     hibernate:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
+
+embedding:
+  vec-path: classpath:models/ko-emb.vec  # 또는 file:/절대/경로/ko-emb.vec
+  dim: 200

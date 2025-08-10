@@ -1,11 +1,13 @@
 package jpabasic.truthaiserver.service;
 
-import jakarta.transaction.Transactional;
+//import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Claim;
 import jpabasic.truthaiserver.domain.Source;
 import jpabasic.truthaiserver.dto.CrossCheckResponseDto;
 import jpabasic.truthaiserver.dto.LLMResultDto;
+import jpabasic.truthaiserver.dto.CrossCheckListDto;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.ClaimRepository;
 import lombok.RequiredArgsConstructor;
@@ -211,5 +213,30 @@ public class CrossCheckService {
         else sb.append(" | 출처 없음/전부 무효");
 
         return sb.toString();
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<CrossCheckListDto> getCrossChecklist(Long promptId) {
+        List<Answer> answers = (promptId == null)
+                ? answerRepository.findAll()
+                : answerRepository.findByPromptId(promptId);
+
+        List<CrossCheckListDto> result = new ArrayList<>();
+        for (Answer a : answers) {
+            int claimCount = a.getClaims().size();
+            int sourceCount = a.getClaims().stream()
+                    .mapToInt(c -> c.getSources() == null ? 0 : c.getSources().size())
+                    .sum();
+
+            result.add(new CrossCheckListDto(
+                    a.getId(),
+                    a.getPrompt() != null ? a.getPrompt().getId() : null,
+                    a.getModel().name(),
+                    a.getOpinion(),
+                    a.getScore()
+            ));
+        }
+        return result;
     }
 }

@@ -11,9 +11,12 @@ import org.openkoreantext.processor.tokenizer.KoreanTokenizer;
 import org.openkoreantext.processor.KoreanTokenJava;
 import scala.collection.Seq;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,8 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class EmbeddingService {
 
-//    @Value("${embedding.vec-path}")
-    private String vecPath = "/Users/gichanpark/Desktop/TruthAI_BE/truthAI-server/src/main/resources/models/korean.vec";
+    @Value("${embedding.vec-path}")
+//    private String vecPath = "models/ko-emb.vec";
+    private String vecPath;
 
     // 필요시 강제 차원 지정(옵션). 지정 안 하면 파일에서 자동으로 추론
     @Value("${embedding.dim:0}")
@@ -37,11 +41,15 @@ public class EmbeddingService {
 
     @PostConstruct
     public void init() {
-        try (BufferedReader br = new BufferedReader(new FileReader(vecPath, StandardCharsets.UTF_8))) {
-            String line = br.readLine();
-            if (line == null) throw new IllegalArgumentException("Empty vec file: " + vecPath);
+        String path = vecPath;
+        if (path == null || path.isBlank()) {
+            path = "classpath:models/ko-emb.vec"; // 기본값 (원하면 yml에 명시)
+        }
 
-            // 첫 줄이 "어휘수 차원수" 헤더인지 확인
+        try (BufferedReader br = openReader(path)) {
+            String line = br.readLine();
+            if (line == null) throw new IllegalArgumentException("Empty vec file: " + path);
+
             String[] first = line.trim().split("\\s+");
             boolean hasHeader = first.length == 2 && isInt(first[0]) && isInt(first[1]);
             if (hasHeader) {
@@ -53,15 +61,13 @@ public class EmbeddingService {
             while (line != null) {
                 String[] parts = line.trim().split("\\s+");
                 if (parts.length < 2) { line = br.readLine(); continue; }
+
                 String token = parts[0];
                 int d = parts.length - 1;
 
-                if (dim <= 0) dim = d; // 헤더가 없던 케이스
-                if (forcedDim > 0) dim = forcedDim; // 강제 차원 지정 시 덮어씀
-                if (d != dim) { // 차원 불일치 라인 스킵
-                    line = br.readLine();
-                    continue;
-                }
+                if (dim <= 0) dim = d;       // 헤더 없으면 라인으로 추론
+                if (forcedDim > 0) dim = forcedDim; // 강제 차원 지정 시 덮어쓰기
+                if (d != dim) { line = br.readLine(); continue; }
 
                 float[] v = new float[dim];
                 for (int i = 0; i < dim; i++) v[i] = Float.parseFloat(parts[i + 1]);
@@ -69,11 +75,32 @@ public class EmbeddingService {
                 loaded++;
                 line = br.readLine();
             }
-            if (dim <= 0 || loaded == 0) throw new IllegalStateException("No vectors loaded from " + vecPath);
-            log.info("Loaded {} token vectors (dim={}) from {}", loaded, dim, vecPath);
+
+            if (dim <= 0 || loaded == 0) {
+                throw new IllegalStateException("No vectors loaded from " + path);
+            }
+            log.info("Loaded {} token vectors (dim={}) from {}", loaded, dim, path);
+
         } catch (Exception e) {
-            log.error("Failed to load .vec from {}", vecPath, e);
+            log.error("Failed to load .vec from {}", path, e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private BufferedReader openReader(String path) throws Exception {
+        if (path.startsWith("classpath:")) {
+            String p = path.substring("classpath:".length());
+            InputStream is = Thread.currentThread()
+                    .getContextClassLoader()
+                    .getResourceAsStream(p);
+            if (is == null) throw new FileNotFoundException("classpath resource not found: " + p);
+            return new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        } else if (path.startsWith("file:")) {
+            Path p = Paths.get(URI.create(path));
+            return Files.newBufferedReader(p, StandardCharsets.UTF_8);
+        } else {
+            // 일반 파일 경로
+            return Files.newBufferedReader(Paths.get(path), StandardCharsets.UTF_8);
         }
     }
 

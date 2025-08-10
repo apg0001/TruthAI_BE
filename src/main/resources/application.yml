@@ -16,4 +16,5 @@ spring:
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
 embedding:
-  vec-path: file:/Users/gichanpark/Desktop/TruthAI_BE/truthAI-server/src/main/resources/models/korean.vec
+  vec-path: classpath:models/ko-emb.vec  # 또는 file:/절대/경로/ko-emb.vec
+  dim: 200
