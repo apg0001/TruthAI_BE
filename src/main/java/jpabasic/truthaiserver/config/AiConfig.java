@@ -28,6 +28,12 @@ public class AiConfig {
     @Value("${gemini.api.url}")
     private String geminiApiUrl;
 
+    @Value("${perplexity.api.url}")
+    private String perplexityApiUrl;
+
+    @Value("${perplexity.api.key}")
+    private String perplexityApiKey;
+
     private final WebClient.Builder webClientBuilder;
 
     public AiConfig(WebClient.Builder webClientBuilder) {
@@ -58,6 +64,14 @@ public class AiConfig {
     public WebClient geminiClient(){
         return webClientBuilder
                 .baseUrl(geminiApiUrl)
+                .build();
+    }
+
+    @Bean
+    public WebClient perplexityClient(){
+        return webClientBuilder
+                .baseUrl(perplexityApiUrl)
+                .defaultHeader("Authorization","Bearer "+perplexityApiKey)
                 .build();
     }
 

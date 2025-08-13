@@ -32,12 +32,14 @@ public class LlmService {
     private final WebClient openAiWebClient;
     private final WebClient claudeClient;
     private final WebClient geminiClient;
+    private final WebClient perplexityClient;
 
-    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient) {
+    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient,WebClient perplexityClient) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
         this.claudeClient=claudeClient;
         this.geminiClient=geminiClient;
+        this.perplexityClient=perplexityClient;
 
     }
 
@@ -96,4 +98,15 @@ public class LlmService {
                 .getParts().get(0)
                 .getText();
     }
+
+//    public String createPerplexityAnswer(String question){
+//
+//        PerplexityResponseDto response=perplexityClient.post()
+//                .uri("")
+//                .bodyValue(request)
+//                .retrieve()
+//                .bodyToMono(PerplexityResponseDto.class)
+//                .block();
+//        return response.getChoices(0).getMessage().getContent();
+//    }
 }
