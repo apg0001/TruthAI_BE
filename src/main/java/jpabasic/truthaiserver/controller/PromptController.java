@@ -20,13 +20,21 @@ public class PromptController {
         this.promptService = promptService;
     }
 
-//    @PostMapping("/create-best")
-//    @Operation(summary="최적화 프롬프트 생성하기")
-//    public ResponseEntity<String> savePrompt(@RequestBody String originalPrompt, @RequestParam Long userId){
-//
-//        String optimizedPrompt=promptService.optimizingPrompt(originalPrompt,userId);
-//        return ResponseEntity.ok(optimizedPrompt);
-//    }
+    @PostMapping("/create-best")
+    @Operation(summary="최적화 프롬프트 생성")
+    public ResponseEntity<String> savePrompt(@RequestBody LlmRequestDto dto){
+
+        String optimizedPrompt=promptService.getOptimizedPrompt(dto);
+        return ResponseEntity.ok(optimizedPrompt);
+    }
+
+    @PostMapping("/get-best")
+    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기")
+    public ResponseEntity<String> getOptimizedAnswer(@RequestBody LlmRequestDto dto){
+
+        String optimizedPrompt=promptService.optimizingPrompt(dto);
+        return ResponseEntity.ok(optimizedPrompt);
+    }
 
     @PostMapping("/summarize")
     @Operation(summary="프롬프트 내용 요약하기",description="model 필드 값은 gpt로 주세요!")

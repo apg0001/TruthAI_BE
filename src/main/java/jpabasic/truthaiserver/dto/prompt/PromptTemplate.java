@@ -11,5 +11,7 @@ public interface PromptTemplate {
     //동적 변수(맵) 받아서 messages 구성
 //    PromptRenderResult render(Map<String,Object> vars);
 
+    List<Message> render(Message message, String persona,String domain);
+
     List<Message> render(Message message);
 }

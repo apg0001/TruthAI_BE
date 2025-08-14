@@ -14,7 +14,8 @@ public class ErrorMessages {
 
     //prompt 관련
     public static final String PROMPT_GENERATE_ERROR="프롬프트 저장에 문제가 생겼어요.";
-    public static final String PROMPT_NULL_ERROR="해당 프롬프트는 저장소에 있지 않아요.";
+    public static final String PROMPT_TEMPLATE_NOT_FOUND="해당 프롬프트는 저장소에 있지 않아요.";
+
 
 
 

@@ -24,6 +24,12 @@ public class LlmRequestDto {
     @NotBlank(message="프롬프트를 작성해주세요.")
     private String question;
 
+    @Schema(description="페르소나:최적화 생성 시에만 입력 필수",required=false)
+    private String persona;
+
+    @Schema(description="도메인 : 유저가 물어보려는 내용의 분야",required=false)
+    private String domain;
+
     public List<LLMModel> toModelEnums(){
         return models.stream()
                 .map(model->{

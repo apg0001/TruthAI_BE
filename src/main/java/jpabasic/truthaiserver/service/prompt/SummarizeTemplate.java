@@ -20,6 +20,11 @@ public class SummarizeTemplate extends BasePromptTemplate {
     }
 
     @Override
+    protected String systemIdentity(String domain, String persona) {
+        return "";
+    }
+
+    @Override
     protected String domainGuidelines(){
         return """
                  # 제목 만들기 가이드

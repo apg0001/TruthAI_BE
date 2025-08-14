@@ -53,6 +53,9 @@ public class LlmService {
         return gptClient(request);
     }
 
+    //LLM 응답을 dto로 반환
+
+
     public String gptClient(ChatGptRequest request){
         //webClient로 OpenAI로 호출
         ChatGptResponse chatGptResponse=openAiWebClient.post()

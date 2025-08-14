@@ -5,6 +5,7 @@ import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Prompt;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
+import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.PromptRepository;
 import jpabasic.truthaiserver.repository.UserRepository;
@@ -26,12 +27,14 @@ public class PromptService {
     private final UserRepository userRepository;
     private final LlmService llmService;
     private final PromptEngine promptEngine;
+    private final OptimizedTemplate optimizedTemplate;
 
-    public PromptService(PromptRepository promptRepository, UserRepository userRepository,LlmService llmService,PromptEngine promptEngine) {
+    public PromptService(PromptRepository promptRepository, UserRepository userRepository, LlmService llmService, PromptEngine promptEngine, OptimizedTemplate optimizedTemplate) {
         this.promptRepository = promptRepository;
         this.userRepository = userRepository;
         this.llmService = llmService;
         this.promptEngine = promptEngine;
+        this.optimizedTemplate = optimizedTemplate;
     }
 
 
@@ -70,10 +73,15 @@ public class PromptService {
         return promptEngine.execute("summarize",prompt);
     }
 
-
-//    public String optimizingPrompt(String myPrompt, Long userId) {
-//
-//    }
+    //최적화 프롬프트 실행(현재는 gpt로만)
+    public String optimizingPrompt(LlmRequestDto dto) {
+        return promptEngine.execute("optimized",dto);
+    }
+    
+    //최적화된 프롬프트 반환
+    public String getOptimizedPrompt(LlmRequestDto dto) {
+        return promptEngine.optimizingPrompt(dto);
+    }
 
     @Transactional
     public User searchUser(Long userId){

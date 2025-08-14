@@ -9,12 +9,26 @@ import java.util.Map;
 
 public abstract class BasePromptTemplate implements PromptTemplate {
 
+    @Override 
+    //프롬프트 최적화 
+    public List<Message> render(Message message, String persona,String domain) {
+        List<Message> msgs = new ArrayList<>();
+        
+        msgs.add(new Message("system", systemIdentity(domain,persona)));    
+        return executeInternalRender(message, msgs);
+    }
+
     @Override
+    // 내용 요약
     public List<Message> render(Message message) {
         List<Message> msgs = new ArrayList<>();
+        return executeInternalRender(message,msgs);
+    }
+
+
+    private List<Message> executeInternalRender(Message message, List<Message> msgs) {
         Map<String, Object> vars=new HashMap<>();
 
-        msgs.add(new Message("system", systemIdentity()));       // 역할/톤
         msgs.add(new Message("system", globalGuidelines()));     // 전역 가드레일
         String domain = domainGuidelines();
         if (domain != null && !domain.isBlank()) {
@@ -30,24 +44,23 @@ public abstract class BasePromptTemplate implements PromptTemplate {
     }
 
     // === 아래 훅(Hook) 메서드들만 서브클래스에서 바꿔 끼움 ===
-    protected String systemIdentity() {
-        return "너는 한국어로 답하는 믿을 수 있는 전문가 비서야. 불확실하면 모른다고 말해.";
-    }
+    protected abstract String systemIdentity(String domain,String persona);
 
     protected String globalGuidelines() {
-        return """
-            # 전역 가드레일
-            - 사실과 의견을 구분해.
-            - 과도한 추측 금지, 출처 불명 확정적 표현 금지.
-            - 목록이 필요하면 간결하게.
-            """;
+        return
+                """
+                Take a deep breath and let's work this out.\s
+                Be sure we have the right answer.
+                """;
     }
 
     // 도메인별 추가 규칙 (없으면 빈 문자열 반환)
-    protected String domainGuidelines() { return ""; }
+    protected abstract String domainGuidelines();
+
 
     // Few-shot 예시(필요 시)
     protected String fewShotExamples(Map<String, Object> vars) { return ""; }
+
 
     // 사용자 입력을 최종적으로 문자열로 구성
     protected abstract String userContent(Message message);
