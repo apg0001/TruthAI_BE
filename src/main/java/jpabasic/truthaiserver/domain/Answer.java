@@ -55,4 +55,11 @@ public class Answer extends BaseEntity{
         this.model = model;
         this.content = answer;
     }
+
+    public Answer(String content,LLMModel model,Prompt prompt,User user){
+        this.content = content;
+        this.model = model;
+        this.prompt = prompt;
+        this.user = user;
+    }
 }

@@ -2,11 +2,17 @@ package jpabasic.truthaiserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
+import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
+import jpabasic.truthaiserver.service.LlmService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -15,25 +21,42 @@ import java.util.Map;
 public class PromptController {
 
     private final PromptService promptService;
+    private final LlmService llmService;
 
-    public PromptController(PromptService promptService) {
+    public PromptController(PromptService promptService,LlmService llmService)
+    {
         this.promptService = promptService;
+        this.llmService = llmService;
     }
 
     @PostMapping("/create-best")
     @Operation(summary="최적화 프롬프트 생성")
-    public ResponseEntity<String> savePrompt(@RequestBody LlmRequestDto dto){
+    public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody LlmRequestDto dto,@AuthenticationPrincipal User user){
+        Long promptId=promptService.saveOriginalPrompt(dto,user);
+        String optimizedPrompt=promptService.getOptimizedPrompt(dto,user);
 
-        String optimizedPrompt=promptService.getOptimizedPrompt(dto);
-        return ResponseEntity.ok(optimizedPrompt);
+        Map<String,Object> map=new HashMap<>();
+        map.put("optimizedPrompt",optimizedPrompt);
+        map.put("promptId",promptId);
+        return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
     }
 
-    @PostMapping("/get-best")
-    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기")
-    public ResponseEntity<String> getOptimizedAnswer(@RequestBody LlmRequestDto dto){
+//    @PostMapping("/get-best")
+//    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기")
+//    public ResponseEntity<String> getOptimizedAnswer(@RequestBody LlmRequestDto dto, @AuthenticationPrincipal User user){
+//
+//        String optimizedPrompt=promptService.optimizingPrompt(dto);
+//        return ResponseEntity.ok(optimizedPrompt);
+//    }
 
-        String optimizedPrompt=promptService.optimizingPrompt(dto);
-        return ResponseEntity.ok(optimizedPrompt);
+    @PostMapping("/get-best/organized")
+    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기")
+    public ResponseEntity<PromptAnswerDto> getOrganizedAnswer(@RequestParam Long promptId,
+                                                              @RequestBody LlmRequestDto dto,
+                                                              @AuthenticationPrincipal User user){
+        String optimizedPrompt=promptService.optimizingPrompt(dto,user,promptId);
+        PromptAnswerDto result=llmService.seperateAnswers(promptId,optimizedPrompt);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/summarize")

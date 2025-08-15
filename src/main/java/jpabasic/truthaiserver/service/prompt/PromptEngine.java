@@ -1,6 +1,8 @@
 package jpabasic.truthaiserver.service.prompt;
 
 import jpabasic.truthaiserver.common.prompt.PromptRegistry;
+import jpabasic.truthaiserver.domain.Prompt;
+import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.PromptTemplate;
@@ -31,12 +33,13 @@ public class PromptEngine {
     //persona 있는 경우
     //최적화 프롬프트 -> 응답까지 생성
     public String execute(String templateKey,LlmRequestDto request){
-       return getOptimizedAnswer(templateKey,new Message(request.getQuestion()),request.getPersona(),request.getDomain());
+       return getOptimizedAnswer(templateKey,new Message(request.getQuestion()),request.getPersona(),request.getPromptDomain());
     }
 
     //최적화 프롬프트 반환(String type)
     public String optimizingPrompt(LlmRequestDto request){
-        String domain=request.getDomain();
+        PromptDomain domain=request.getPromptDomain();
+//        PromptDomain promptDomain=PromptDomain.nameOf(domain);
         String persona=request.getPersona();
         Message message=new Message(request.getQuestion());
 
@@ -44,7 +47,7 @@ public class PromptEngine {
     }
 
     //최적화 프롬프트 반환(List<Message>)
-    private List<Message> executeInternal(String templateKey, Message message, @Nullable String persona,@Nullable String domain){
+    private List<Message> executeInternal(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain){
         PromptTemplate template=registry.getByKey(templateKey);
         if(template==null){
             throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
@@ -54,7 +57,7 @@ public class PromptEngine {
     }
 
     //최적화 프롬프트 -> 생성형 ai한테 응답까지 받기
-    private String getOptimizedAnswer(String templateKey, Message message, @Nullable String persona,@Nullable String domain){
+    private String getOptimizedAnswer(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain){
         List<Message> result=executeInternal(templateKey,message,persona,domain);
         return llmService.createGptAnswerWithPrompt(result);
     }

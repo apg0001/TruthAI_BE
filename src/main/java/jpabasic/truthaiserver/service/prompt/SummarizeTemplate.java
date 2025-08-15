@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.service.prompt;
 
+import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
 import jpabasic.truthaiserver.dto.answer.Message;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,10 @@ public class SummarizeTemplate extends BasePromptTemplate {
                 """.formatted(text);
     }
 
+
+
     @Override
-    protected String systemIdentity(String domain, String persona) {
+    protected String systemIdentity(PromptDomain domain, String persona) {
         return "";
     }
 

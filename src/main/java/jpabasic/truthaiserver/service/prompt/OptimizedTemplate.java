@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.service.prompt;
 
+import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
 import org.springframework.stereotype.Component;
@@ -8,22 +9,23 @@ import org.springframework.stereotype.Component;
 public class OptimizedTemplate extends BasePromptTemplate {
     @Override
     //도메인 + 페르소나
-    protected String systemIdentity(String domain,String persona) {
+    protected String systemIdentity(PromptDomain domain,String persona) {
 
         return String.format("You are an expert %s advisor and educator for %s.",domain,persona);
 
     }
 
-    @Override
-    protected String domainGuidelines() {
-        return """
-            # Constraints
-                - Do not reveal internal reasoning. Instead, include a one-sentence rationale labeled "Why".
-                - There must be a specific source with "Why"
-                - If key facts may be time-sensitive, state that you would verify with recent sources before finalizing.
-                - Be clear, specific, and avoid hedging.
-            """;
-    }
+//    @Override
+//    protected String domainGuidelines() {
+//        return """
+//            # Constraints
+//                - Do not reveal internal reasoning. Instead, include a one-sentence rationale labeled "Why".
+//                - There must be a specific source with "Why"
+//                - If key facts may be time-sensitive, state that you would verify with recent sources before finalizing.
+//                - Be clear, specific, and avoid hedging.
+//                - If there is no 100% accurate sources, say "i can't find right sources. sorry", then don't give any sources.
+//            """;
+//    }
 
 
     @Override
@@ -38,13 +40,6 @@ public class OptimizedTemplate extends BasePromptTemplate {
                 
                 ## Question: ```%s```
                 
-                ## Output format (strict):
-                1) Think and prepare your answer in English internally, but only ouptut the final answer in Korean. Do not include English text in the output.
-                2) Why: Provide a concise reason explaining why your answer is correct or reliable, and clearly reference the sources. 
-                3) Sources: List at least 2 different credible source URLs you used, in bullet point format. Eacu URL must be directly relevant to the content. 
-                
-            
-                
                 
                 """.formatted(text);
     }
@@ -56,7 +51,7 @@ public class OptimizedTemplate extends BasePromptTemplate {
 
 
 
-    public String getOptimizedPrompt(String domain,String persona,Message message) {
+    public String getOptimizedPrompt(PromptDomain domain, String persona, Message message) {
         StringBuilder sb=new StringBuilder();
         sb.append(systemIdentity(domain,persona)).append("\n\n")
                 .append(domainGuidelines()).append("\n\n")

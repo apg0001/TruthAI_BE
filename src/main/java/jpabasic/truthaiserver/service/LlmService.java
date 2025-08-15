@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.service;
 
+import jpabasic.truthaiserver.dto.LLMResultDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
@@ -7,6 +8,7 @@ import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +56,9 @@ public class LlmService {
     }
 
     //LLM 응답을 dto로 반환
-
+    public PromptAnswerDto seperateAnswers(Long promptId,String response){
+        return new PromptAnswerDto(promptId,response);
+    }
 
     public String gptClient(ChatGptRequest request){
         //webClient로 OpenAI로 호출
