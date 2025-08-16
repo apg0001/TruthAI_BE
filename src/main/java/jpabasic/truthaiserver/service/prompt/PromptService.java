@@ -10,8 +10,6 @@ import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
-import jpabasic.truthaiserver.repository.UserRepository;
-import jpabasic.truthaiserver.service.LlmService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import jpabasic.truthaiserver.exception.ErrorMessages;
@@ -80,14 +78,13 @@ public class PromptService {
         return saved.getId();
     }
 
-
-    @Transactional
-    public Long saveOptimizedPrompt(String optimizedPrompt,Long promptId){
+    //최적화 프롬프트 저장
+    public void saveOptimizedPrompt(String optimizedPrompt, Long promptId){
         Prompt prompt=promptRepository.findById(promptId)
                 .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
         prompt.optimize(optimizedPrompt);
         System.out.println("✅promptId"+prompt.getId());
-        return prompt.getId();
+        promptRepository.save(prompt);
     }
 
 
@@ -103,6 +100,8 @@ public class PromptService {
         saveAnswer(answer,user,promptId,model);
         return answer;
     }
+
+
     
     //최적화된 프롬프트 반환
     public String getOptimizedPrompt(LlmRequestDto dto,Long promptId) {

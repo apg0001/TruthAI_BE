@@ -53,7 +53,7 @@ public class PromptController {
 //    }
 
     @PostMapping("/get-best/organized")
-    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기")
+    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "현재는 아직 gpt만 가능합니다.")
     public ResponseEntity<PromptAnswerDto> getOrganizedAnswer(@RequestParam Long promptId,
                                                               @RequestBody LlmRequestDto dto,
                                                               @AuthenticationPrincipal User user){
