@@ -13,21 +13,21 @@ import java.util.*;
 
 @RestController
 @Tag(name = "교차검증 관련 api")
-@RequestMapping("/crosscheck")
+@RequestMapping("/crosscheck/{promptID}")
 @RequiredArgsConstructor
 public class CrossCheckController {
     private final CrossCheckService crossCheckService;
     private final EmbeddingService embeddingService;
 
 
-    @GetMapping("/{promptId}")
+    @PostMapping
     @Operation(summary = "모델 답변간 비교", description = "프롬프트 ID를 전달해주시면 됩니다.")
     public CrossCheckResponseDto crossCheck(@PathVariable Long promptId) {
         return crossCheckService.crossCheckPrompt(promptId);
     }
 
 
-    @GetMapping("/prompt/{promptId}/list")
+    @GetMapping
     @Operation(
             summary = "교차검증 결과 리스트",
             description = "프롬프트 ID에 해당하는 교차검증 결과 리스트를 조회합니다."

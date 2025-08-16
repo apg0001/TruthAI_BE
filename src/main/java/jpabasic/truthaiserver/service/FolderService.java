@@ -1,22 +1,25 @@
 package jpabasic.truthaiserver.service;
 
 import jakarta.transaction.Transactional;
+import jpabasic.truthaiserver.domain.Prompt;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.domain.Folder;
 import jpabasic.truthaiserver.dto.CreateFolderRequest;
 import jpabasic.truthaiserver.dto.FolderSummaryResponse;
 import jpabasic.truthaiserver.repository.FolderRepository;
+import jpabasic.truthaiserver.repository.PromptRepository;
 import jpabasic.truthaiserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class FolderService {
     private final FolderRepository folderRepository;
-    private final UserRepository userRepository;
+    private final PromptRepository promptRepository;
 
     // 폴더 생성
     @Transactional
@@ -43,4 +46,18 @@ public class FolderService {
 
     }
 
+    // 프롬프트를 폴더에 저장, 또는 이동
+    @Transactional
+    public void movePromptToFolder(Long folderId, Long promptId, User principalUser) {
+        Long userId = principalUser.getId();
+
+        Folder folder = folderRepository.findByIdAndUserId(folderId, userId)
+                .orElseThrow(() -> new NoSuchElementException("폴더를 찾을 수 없습니다."));
+        Prompt prompt = promptRepository.findByIdAndUserId(promptId, userId)
+                .orElseThrow(() -> new NoSuchElementException("프롬프트를 찾을 수 없습니다."));
+
+        // 이동
+        prompt.assignFolder(folder);
+        // 변경감지로 업데이트
+    }
 }
