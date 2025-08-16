@@ -6,6 +6,7 @@ import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.service.LlmService;
+import jpabasic.truthaiserver.service.SourcesService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,18 +23,20 @@ public class PromptController {
 
     private final PromptService promptService;
     private final LlmService llmService;
+    private final SourcesService sourcesService;
 
-    public PromptController(PromptService promptService,LlmService llmService)
+    public PromptController(PromptService promptService,LlmService llmService,SourcesService sourcesService)
     {
         this.promptService = promptService;
         this.llmService = llmService;
+        this.sourcesService = sourcesService;
     }
 
     @PostMapping("/create-best")
     @Operation(summary="최적화 프롬프트 생성")
     public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody LlmRequestDto dto,@AuthenticationPrincipal User user){
         Long promptId=promptService.saveOriginalPrompt(dto,user);
-        String optimizedPrompt=promptService.getOptimizedPrompt(dto,user);
+        String optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
 
         Map<String,Object> map=new HashMap<>();
         map.put("optimizedPrompt",optimizedPrompt);
@@ -56,6 +59,7 @@ public class PromptController {
                                                               @AuthenticationPrincipal User user){
         String optimizedPrompt=promptService.optimizingPrompt(dto,user,promptId);
         PromptAnswerDto result=llmService.seperateAnswers(promptId,optimizedPrompt);
+//        sourcesService.saveSources(result); //출처 저장은 ai 교차 검증 시에 하는걸로..
         return ResponseEntity.ok(result);
     }
 

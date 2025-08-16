@@ -1,18 +1,20 @@
 package jpabasic.truthaiserver.dto.prompt;
 
 import jpabasic.truthaiserver.dto.answer.Message;
+import jpabasic.truthaiserver.exception.BusinessException;
 import lombok.AllArgsConstructor;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import org.apache.commons.codec.language.bm.Rule;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static jpabasic.truthaiserver.exception.ErrorMessages.ANSWER_RENDER_ERROR;
+
 //프롬프트 최종 렌더 결과
-public record PromptAnswerDto(Long promptId,String answer, List<Map<String,String>> sources) {
+public record PromptAnswerDto(Long promptId,String answer, String sources) {
 
     public PromptAnswerDto(Long promptId,String response){
         this(
@@ -24,33 +26,48 @@ public record PromptAnswerDto(Long promptId,String answer, List<Map<String,Strin
 
     private static String parseAnswer(String response){
         //##답변 이후 부터 ##Sources 전까지 추출
-        String[] parts=response.split("##Sources",2);
-        if(parts.length>0){
-            return parts[0]
-                    .replace("##답변","")
-                    .trim();
-        }
-        return "";
+        String[] parts=response.split("## Sources",2);
+        System.out.println("✅parts"+ Arrays.stream(parts).toList());
+
+        System.out.println("✅ parts[0]:"+parts[0]);
+        System.out.println("✅ parts[1]:"+parts[1]);
+        return parts[0];
     }
 
-    private static List<Map<String,String>> parseSources(String response){
-        List<Map<String,String>> sources=new ArrayList<>();
+    private static String parseSources(String response) {
 
-        //마크다운 링크 패턴 : [링크텍스트] (URL)
-        /**
-         * - Harvard T.H. Chan School of Public Health. "The Nutrition Source - Carbohydrates." [www.hsph.harvard.edu](https://www.hsph.harvard.edu/nutritionsource/carbohydrates/)
-         */
-        Pattern pattern= Pattern.compile("-\\s*(.*?)\\s*\\[(.*?)\\]\\((.*?)\\)");
-        Matcher matcher=pattern.matcher(response);
+        if (response == null) return "[]";
 
-        while(matcher.find()){
-            Map<String,String> map=new HashMap<>();
-            map.put("title",matcher.group(1).trim()); //설명/출처명
-            map.put("displayText",matcher.group(2).trim()); //링크 표시 텍스트
-            map.put("url",matcher.group(3).trim()); //실제 URL
-            sources.add(map);
+        try {
+            String[] parts = response.split("\n\n##\\s*Sources", 2); //## Sources, ##Sources 모두 허용
+            if (parts.length > 2) {
+                return "[]";
+            }
+
+            String text = parts[1].trim();
+            JSONArray jsonArray = new JSONArray();
+
+            //줄바꿈 기준으로 나누기
+            String[] lines = text.split("\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (line.startsWith("-")) {
+                    String[] splits = line.split(":", 2);
+                    if (splits.length < 2) continue;
+
+                    String name = splits[0].trim();
+                    String url = splits[1].trim();
+
+                    JSONObject obj = new JSONObject();
+                    obj.put("name", name);
+                    obj.put("url", url);
+                    jsonArray.add(obj);
+                }
+            }
+
+            return text;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new BusinessException(ANSWER_RENDER_ERROR);
         }
-        System.out.println(sources);
-        return sources;
     }
 }

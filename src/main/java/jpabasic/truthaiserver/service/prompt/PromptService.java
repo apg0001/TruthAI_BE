@@ -81,10 +81,12 @@ public class PromptService {
     }
 
 
+    @Transactional
     public Long saveOptimizedPrompt(String optimizedPrompt,Long promptId){
         Prompt prompt=promptRepository.findById(promptId)
                 .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
         prompt.optimize(optimizedPrompt);
+        System.out.println("✅promptId"+prompt.getId());
         return prompt.getId();
     }
 
@@ -103,15 +105,19 @@ public class PromptService {
     }
     
     //최적화된 프롬프트 반환
-    public String getOptimizedPrompt(LlmRequestDto dto,User user) {
-        Long promptId=saveOriginalPrompt(dto,user);
+    public String getOptimizedPrompt(LlmRequestDto dto,Long promptId) {
+//        Long promptId=saveOriginalPrompt(dto,user);
         String optimizedPrompt=promptEngine.optimizingPrompt(dto);
         saveOptimizedPrompt(optimizedPrompt,promptId);
         return optimizedPrompt;
     }
 
     //gpt 응답 저장
+    @Transactional
     public void saveAnswer(String content,User user,Long promptId,LLMModel model) {
+
+        log.info("✅User:{}",user);
+
         Prompt prompt=promptRepository.findById(promptId)
                 .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
 
