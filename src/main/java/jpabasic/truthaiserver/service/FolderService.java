@@ -6,11 +6,14 @@ import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.domain.Folder;
 import jpabasic.truthaiserver.dto.CreateFolderRequest;
 import jpabasic.truthaiserver.dto.FolderSummaryResponse;
+import jpabasic.truthaiserver.dto.PromptListDto;
+import jpabasic.truthaiserver.dto.RenameFolderRequest;
 import jpabasic.truthaiserver.repository.FolderRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -47,15 +50,39 @@ public class FolderService {
 
     // 프롬프트를 폴더에 저장, 또는 이동
     @Transactional
-    public void movePromptToFolder(Long folderId, Long promptId, User principalUser) {
-        Long userId = principalUser.getId();
-
-        Folder folder = folderRepository.findByIdAndUserId(folderId, userId)
+    public void movePromptToFolder(Long folderId, Long promptId) {
+        Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new NoSuchElementException("폴더를 찾을 수 없습니다."));
-        Prompt prompt = promptRepository.findByIdAndUserId(promptId, userId)
+        Prompt prompt = promptRepository.findById(promptId)
                 .orElseThrow(() -> new NoSuchElementException("프롬프트를 찾을 수 없습니다."));
 
         // 이동
         prompt.assignFolder(folder);
+    }
+
+    @Transactional
+    public void renameFolder(Long folderId, String newName){
+        Folder folder = folderRepository.findById((folderId))
+                .orElseThrow(() -> new NoSuchElementException("폴더를 찾을 수 없습니다."));
+        folder.rename(newName);
+    }
+
+    @Transactional
+    public List<PromptListDto> getPromptsInFolder(Long folderId){
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("폴더가 존재하지 않습니다."));
+
+        // 최신순으로 프롬프트 조회
+        List<Prompt> prompts = promptRepository.findByFolderIdOrderByCreatedAtDesc(folderId);
+
+        List<PromptListDto> list = new ArrayList<>(prompts.size());
+        for (Prompt p : prompts){
+            list.add(new PromptListDto(
+                    p.getId(),
+                    p.getOriginalPrompt(),
+                    p.getCreatedAt()
+            ));
+        }
+        return list;
     }
 }

@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jpabasic.truthaiserver.domain.User;
-import jpabasic.truthaiserver.dto.CreateFolderRequest;
-import jpabasic.truthaiserver.dto.CreateFolderResponse;
-import jpabasic.truthaiserver.dto.FolderSummaryResponse;
+import jpabasic.truthaiserver.dto.*;
 import jpabasic.truthaiserver.service.FolderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,8 +36,23 @@ public class FolderController {
     @PutMapping("/{folderID}/prompts/{promptId}")
     @Operation(summary = "프롬프트 폴더 저장/이동", description = "promptId의 프롬프트를 folderId 폴더로 이동/저장합니다.")
     public void movePrompt(@PathVariable Long folderID,
-                           @PathVariable Long promptId,
-                           @AuthenticationPrincipal User user){
-        folderService.movePromptToFolder(folderID, promptId, user);
+                           @PathVariable Long promptId){
+        folderService.movePromptToFolder(folderID, promptId);
+    }
+
+    // 폴더 이름 변경
+    @PatchMapping("/{folderId}")
+    @Operation(summary = "폴더 이름 변경", description = "folderId 폴더의 이름을 변경합니다.")
+    public void rename(@PathVariable Long folderId,
+                       @RequestBody @Valid RenameFolderRequest request){
+        folderService.renameFolder(folderId, request.getName());
+    }
+
+    @GetMapping("/{folderId}")
+    @Operation(summary = "폴더 내 프롬프트 목록 조회", description = "folderId 폴더에 저장된 프롬프트 리스트를 반환합니다.")
+    public List<PromptListDto> getPromptsInForder(
+            @PathVariable Long folderId
+    ){
+        return folderService.getPromptsInFolder(folderId);
     }
 }
