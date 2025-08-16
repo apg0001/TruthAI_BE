@@ -1,12 +1,14 @@
 package jpabasic.truthaiserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name="폴더 관련 api")
 @RequestMapping("/folder")
 public class FolderController {
 
