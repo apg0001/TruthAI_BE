@@ -8,7 +8,6 @@ import jpabasic.truthaiserver.dto.CreateFolderRequest;
 import jpabasic.truthaiserver.dto.FolderSummaryResponse;
 import jpabasic.truthaiserver.repository.FolderRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
-import jpabasic.truthaiserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +57,5 @@ public class FolderService {
 
         // 이동
         prompt.assignFolder(folder);
-        // 변경감지로 업데이트
     }
 }

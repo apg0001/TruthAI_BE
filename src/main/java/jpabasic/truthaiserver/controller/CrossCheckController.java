@@ -17,7 +17,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CrossCheckController {
     private final CrossCheckService crossCheckService;
-    private final EmbeddingService embeddingService;
 
 
     @PostMapping
