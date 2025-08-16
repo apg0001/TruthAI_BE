@@ -23,7 +23,7 @@ public class PromptRegistry {
     public PromptTemplate getByKey(String key) {
         PromptTemplate template = byKey.get(key);
         if(template == null) {
-            throw new BusinessException(ErrorMessages.PROMPT_NULL_ERROR);
+            throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
         }
         return template;
     }

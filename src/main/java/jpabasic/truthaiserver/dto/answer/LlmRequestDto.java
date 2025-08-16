@@ -3,6 +3,7 @@ package jpabasic.truthaiserver.dto.answer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jpabasic.truthaiserver.domain.LLMModel;
+import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import lombok.*;
@@ -24,6 +25,12 @@ public class LlmRequestDto {
     @NotBlank(message="프롬프트를 작성해주세요.")
     private String question;
 
+    @Schema(description="페르소나:최적화 생성 시에만 입력 필수",required=false)
+    private String persona;
+
+    @Schema(description="도메인 : 유저가 물어보려는 내용의 분야",required=false)
+    private PromptDomain promptDomain;
+
     public List<LLMModel> toModelEnums(){
         return models.stream()
                 .map(model->{
@@ -35,5 +42,6 @@ public class LlmRequestDto {
                 })
                 .collect(Collectors.toList());
     }
+
 
 }

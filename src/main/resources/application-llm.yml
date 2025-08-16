@@ -15,3 +15,7 @@ gemini:
     key: ${GEMINI_API_KEY}
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
 
+perplexity:
+  api:
+    key: ${PERPLEXITY_API_KEY}
+    url: https://api.perplexity.ai/chat/completions

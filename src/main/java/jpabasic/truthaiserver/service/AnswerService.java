@@ -10,6 +10,7 @@ import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.repository.AnswerRepository;
@@ -24,6 +25,7 @@ import static jpabasic.truthaiserver.domain.LLMModel.CLAUDE;
 import static jpabasic.truthaiserver.domain.LLMModel.GPT;
 import static jpabasic.truthaiserver.domain.LLMModel.GEMINI;
 import static jpabasic.truthaiserver.domain.LLMModel.PERPLEXITY;
+import static jpabasic.truthaiserver.exception.ErrorMessages.PROMPT_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -72,6 +74,17 @@ public class AnswerService {
 
     }
 
+
+    public Answer getAnswer(PromptAnswerDto dto) {
+        Long promptId = dto.promptId();
+        Answer answer = null;
+        try {
+            answer = answerRepository.findByPromptIdAndModel(promptId, GPT);
+        } catch (Exception e) {
+            new BusinessException(ErrorMessages.MESSAGE_NULL_ERROR);
+        }
+        return answer;
+    }
 
 
 

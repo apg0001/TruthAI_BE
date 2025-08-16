@@ -19,6 +19,15 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        format_sql: true
+        generate_statistics: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 embedding:
   vec-path: classpath:models/ko-emb.vec  # 또는 file:/절대/경로/ko-emb.vec

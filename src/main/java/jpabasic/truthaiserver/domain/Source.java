@@ -24,4 +24,17 @@ public class Source {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "claim_id")
     private Claim claim;
+
+    //prompt or answer와 매핑
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="answer_id")
+    private Answer answer;
+
+    public Source(String sourceTitle,String sourceUrl,Answer answer) {
+        this.sourceTitle = sourceTitle;
+        this.sourceUrl = sourceUrl;
+        this.answer = answer;
+    }
+
+
 }

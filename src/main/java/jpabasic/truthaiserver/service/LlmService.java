@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.service;
 
+import jpabasic.truthaiserver.dto.LLMResultDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
@@ -7,6 +8,7 @@ import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,12 +34,14 @@ public class LlmService {
     private final WebClient openAiWebClient;
     private final WebClient claudeClient;
     private final WebClient geminiClient;
+    private final WebClient perplexityClient;
 
-    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient) {
+    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient,WebClient perplexityClient) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
         this.claudeClient=claudeClient;
         this.geminiClient=geminiClient;
+        this.perplexityClient=perplexityClient;
 
     }
 
@@ -49,6 +53,11 @@ public class LlmService {
     public String createGptAnswerWithPrompt(List<Message> messageList){
         ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList);
         return gptClient(request);
+    }
+
+    //LLM 응답을 dto로 반환
+    public PromptAnswerDto seperateAnswers(Long promptId,String response){
+        return new PromptAnswerDto(promptId,response);
     }
 
     public String gptClient(ChatGptRequest request){
@@ -96,4 +105,15 @@ public class LlmService {
                 .getParts().get(0)
                 .getText();
     }
+
+//    public String createPerplexityAnswer(String question){
+//
+//        PerplexityResponseDto response=perplexityClient.post()
+//                .uri("")
+//                .bodyValue(request)
+//                .retrieve()
+//                .bodyToMono(PerplexityResponseDto.class)
+//                .block();
+//        return response.getChoices(0).getMessage().getContent();
+//    }
 }

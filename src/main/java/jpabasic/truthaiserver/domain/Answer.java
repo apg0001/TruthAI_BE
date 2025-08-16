@@ -36,7 +36,7 @@ public class Answer extends BaseEntity{
     private Prompt prompt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id",nullable=false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -54,5 +54,12 @@ public class Answer extends BaseEntity{
     public Answer(LLMModel model,String answer){
         this.model = model;
         this.content = answer;
+    }
+
+    public Answer(String content,LLMModel model,Prompt prompt,User user){
+        this.content = content;
+        this.model = model;
+        this.prompt = prompt;
+        this.user = user;
     }
 }
