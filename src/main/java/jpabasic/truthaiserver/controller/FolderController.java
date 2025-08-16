@@ -20,7 +20,7 @@ public class FolderController {
     private final FolderService folderService;
     @PostMapping
     @Operation(summary = "폴더 생성", description = "폴더 이름을 전달하면 해당 사용자 소유의 폴더를 생성합니다.")
-    public CreateFolderResponse savePromptInFolder(@RequestBody @Valid CreateFolderRequest request, @AuthenticationPrincipal User user) {
+    public CreateFolderResponse savePromptInFolder(@RequestBody @Valid CreateFolderRequest request, @AuthenticationPrincipal(expression = "user") User user) {
         Long id = folderService.createFolder(request, user);
         return new CreateFolderResponse(id);
     }
@@ -28,7 +28,7 @@ public class FolderController {
     // 폴더 조회
     @GetMapping
     @Operation(summary = "폴더 목록 조회")
-    public List<FolderSummaryResponse> list(@AuthenticationPrincipal User user) {
+    public List<FolderSummaryResponse> list(@AuthenticationPrincipal(expression = "user") User user) {
         return folderService.listFolders(user);
     }
 
