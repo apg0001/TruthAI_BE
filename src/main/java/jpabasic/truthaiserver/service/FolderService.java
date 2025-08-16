@@ -16,15 +16,12 @@ public class FolderService {
     private final UserRepository userRepository;
 
     @Transactional
-    public Long createFolder(CreateFolderRequest request){
-        User user = userRepository.findById(request.getUserID())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다: " + request.getUserID()));
-
+    public Long createFolder(CreateFolderRequest request, User user){
         Folder folder = new Folder();
         folder.assignUser(user);
+        folder.rename(request.getFolderName());
 
         Folder saved = folderRepository.save(folder);
         return saved.getId();
-
     }
 }

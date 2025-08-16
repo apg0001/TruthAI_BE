@@ -19,8 +19,11 @@ public class Folder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 255, nullable = false)
+    private String name;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL)
@@ -29,5 +32,8 @@ public class Folder {
 
     public void assignUser(User user) {
         this.user = user;
+    }
+    public void rename(String newName) {
+        this.name = newName;
     }
 }
