@@ -57,13 +57,19 @@ public class PromptController {
 
     @PostMapping("/get-best/organized")
     @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "현재는 아직 gpt만 가능합니다.")
-    public ResponseEntity<List<Map<LLMModel,String>>> getOrganizedAnswer(@RequestParam Long promptId,
+    public ResponseEntity<List<Map<LLMModel,PromptAnswerDto>>> getOrganizedAnswer(@RequestParam Long promptId,
                                                               @RequestBody LlmRequestDto dto,
                                                               @AuthenticationPrincipal User user){
 
-        List<Map<LLMModel,String>> result=promptService.runByModel(dto);
-//        PromptAnswerDto result=llmService.seperateAnswers(promptId,optimizedPrompt);
-//        sourcesService.saveSources(result); //출처 저장은 ai 교차 검증 시에 하는걸로..
+        //최적화 프롬프트 받고 응답 받기
+        List<Map<LLMModel,String>> response=promptService.runByModel(dto);
+
+        //answer,sources 나눠서 응답 받기
+        List<Map<LLMModel,PromptAnswerDto>> result=llmService.seperateAnswers(promptId,response);
+
+        //응답 내용 저장
+        Long answerId=promptService.saveAnswers(result,user);
+        sourcesService.saveSources(result); //출처 저장은 ai 교차 검증 시에 하는걸로..
         return ResponseEntity.ok(result);
     }
 

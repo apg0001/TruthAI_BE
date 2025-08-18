@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.service;
 
+import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
@@ -13,7 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -73,8 +76,15 @@ public class LlmService {
     }
 
     //LLM 응답을 dto로 반환
-    public PromptAnswerDto seperateAnswers(Long promptId,String response){
-        return new PromptAnswerDto(promptId,response);
+//    public PromptAnswerDto seperateAnswers(Long promptId,String response){
+//        return new PromptAnswerDto(promptId,response);
+//    }
+
+    public List<Map<LLMModel,PromptAnswerDto>> seperateAnswers(Long promptId, List<Map<LLMModel,String>> answers){
+        return answers.stream()
+                .flatMap(m->m.entrySet().stream())
+                .map(e->Map.of(e.getKey(),new PromptAnswerDto(promptId,e.getValue())))
+                .toList();
     }
 
     public String gptClient(ChatGptRequest request){

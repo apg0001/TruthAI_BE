@@ -8,6 +8,7 @@ import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
+import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
@@ -15,10 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -133,7 +131,7 @@ public class PromptService {
 
 
 
-//        saveAnswer(answer,user,promptId,llmModels);
+
 ////        return answer;
     }
 
@@ -152,23 +150,32 @@ public class PromptService {
         return optimizedPrompt;
     }
 
-    //gpt 응답 저장
+    //LLM 응답 저장
     @Transactional
-    public void saveAnswer(String content,User user,Long promptId,LLMModel model) {
+    public void saveAnswers(List<Map<LLMModel, PromptAnswerDto>> raw,User user) {
 
-        log.info("✅User:{}",user);
-
-        Prompt prompt=promptRepository.findById(promptId)
-                .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
-
-        //Answer entity 생성
-        Answer answer=new Answer(content,model,prompt,user);
-        answerRepository.save(answer);
-
-        // Prompt entity와 매핑
-        prompt.addAnswer(answer);
+        raw.forEach(map->mapping(map,user));
 
     }
+
+    //여러 개의 모델-답변 리스트 분리
+    public void mapping(Map<LLMModel,PromptAnswerDto> map,User user) {
+       map.forEach((model,dto)->saveOne(model,dto,user));
+    }
+
+    //Answer Entity db에 저장
+    public void saveOne(LLMModel model,PromptAnswerDto dto,User user) {
+
+        Prompt prompt=promptRepository.findById(dto.promptId())
+                .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
+
+        String content=dto.answer();
+        Answer entity=new Answer(content,model,prompt,user);
+        answerRepository.save(entity);
+
+    }
+
+
 
 
 }
