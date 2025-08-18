@@ -31,6 +31,8 @@ public class LlmRequestDto {
     @Schema(description="도메인 : 유저가 물어보려는 내용의 분야",required=false)
     private PromptDomain promptDomain;
 
+    private String templateKey;
+
     public List<LLMModel> toModelEnums(){
         return models.stream()
                 .map(model->{

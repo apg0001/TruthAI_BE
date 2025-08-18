@@ -1,8 +1,7 @@
 package jpabasic.truthaiserver.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
+import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
@@ -67,7 +66,7 @@ public class LlmTestController {
     @GetMapping("/claude-test")
     public String claudeTest(@RequestParam(name="prompt")String prompt) {
 
-        ClaudeRequest request=new ClaudeRequest(claudeModel,prompt);
+        ClaudeRequestDto request=new ClaudeRequestDto(prompt);
 
         //WebClient로 ClaudeAI로 호출
         ClaudeResponse claudeResponse=claudeClient.post()
@@ -82,7 +81,7 @@ public class LlmTestController {
     @GetMapping("/gemini-test")
     public String geminiTest(@RequestParam(name="prompt")String prompt) {
 
-        GeminiRequestDto request = GeminiRequestDto.fromText(prompt);
+        GeminiRequestDto request = GeminiRequestDto.fromText(null,prompt);
 
         //WebClient로 gemini 호출
         GeminiResponseDto response = geminiClient.post()

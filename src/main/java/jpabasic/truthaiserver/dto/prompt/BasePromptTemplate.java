@@ -2,15 +2,16 @@ package jpabasic.truthaiserver.dto.prompt;
 
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.Message;
+import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class BasePromptTemplate implements PromptTemplate {
+public abstract class BasePromptTemplate {
 
-    @Override
+
     public List<Message> render(Message message, String persona, PromptDomain domain) {
         List<Message> msgs = new ArrayList<>();
 
@@ -18,7 +19,7 @@ public abstract class BasePromptTemplate implements PromptTemplate {
         return executeInternalRender(message, msgs);
     }
 
-    @Override
+
     // 내용 요약
     public List<Message> render(Message message) {
         List<Message> msgs = new ArrayList<>();
@@ -43,8 +44,11 @@ public abstract class BasePromptTemplate implements PromptTemplate {
         return msgs;
     }
 
+
     // === 아래 훅(Hook) 메서드들만 서브클래스에서 바꿔 끼움 ===
-    protected abstract String systemIdentity(PromptDomain domain, String persona);
+    protected String systemIdentity(PromptDomain domain, String persona) {
+        return String.format("You are an expert %s advisor and educator for %s.",domain,persona);
+    }
 
     protected String globalGuidelines() {
         return
@@ -112,6 +116,64 @@ public abstract class BasePromptTemplate implements PromptTemplate {
     }
 
 
+
+
     // 사용자 입력을 최종적으로 문자열로 구성
-    protected abstract String userContent(Message message);
+    protected String userContent(Message message) {
+        String text=message.getContent();
+        return """
+                ## Your task:
+                Answer the following question, delimited by triple backticks.\s
+                Provide a detailed and well-structured answer with at least 3 paragraphs. Include examples, explanations, and comparisons if relevant. 
+                
+                
+                ## Question: ```%s```
+                
+                
+                """.formatted(text);
+    }
+
+
+    //Claude 용으로 재구성
+    public List<ClaudeRequestDto.ClaudeMessage> toAnthropicRequest(
+            Message userMessage,
+            String persona,
+            PromptDomain domain
+    ){
+
+        //1. System 문자열 구성 : systemIdentity + global + domain ( + few-shot)
+        StringBuilder systemBuilder=new StringBuilder();
+        systemBuilder.append(systemIdentity(domain, persona)) //이건 도대체 어떻게 되는거지 샤갈
+                .append("\n\n")
+                .append(globalGuidelines());
+
+        //domainGuideLines는 선택사항
+        String domainExtra=domainGuidelines();
+        if(!domainExtra.isBlank()){
+            systemBuilder.append("\n\n").append(domainExtra);
+        }
+
+        //few-shot도 선택사항
+        String fewshot=fewShotExamples(new HashMap<>());
+        if(!fewshot.isBlank()){
+            systemBuilder.append("\n\n").append(fewshot);
+        }
+
+        String system=systemBuilder.toString().trim();
+
+
+
+        //2. message 구성
+        List<ClaudeRequestDto.ClaudeMessage> messages=new ArrayList<>();
+        messages.add(new ClaudeRequestDto.ClaudeMessage(userContent(userMessage),"user"));
+        messages.add(new ClaudeRequestDto.ClaudeMessage(system,"system"));
+
+        return messages;
+
+    }
+
+
+    public String key() {
+        return "optimized";
+    }
 }

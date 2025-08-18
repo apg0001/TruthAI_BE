@@ -2,8 +2,10 @@ package jpabasic.truthaiserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
+import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.service.LlmService;
 import jpabasic.truthaiserver.service.SourcesService;
@@ -14,6 +16,7 @@ import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -36,7 +39,7 @@ public class PromptController {
     @Operation(summary="최적화 프롬프트 생성")
     public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody LlmRequestDto dto,@AuthenticationPrincipal User user){
         Long promptId=promptService.saveOriginalPrompt(dto,user);
-        String optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
+        List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
 
         Map<String,Object> map=new HashMap<>();
         map.put("optimizedPrompt",optimizedPrompt);
@@ -54,11 +57,12 @@ public class PromptController {
 
     @PostMapping("/get-best/organized")
     @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "현재는 아직 gpt만 가능합니다.")
-    public ResponseEntity<PromptAnswerDto> getOrganizedAnswer(@RequestParam Long promptId,
+    public ResponseEntity<List<Map<LLMModel,String>>> getOrganizedAnswer(@RequestParam Long promptId,
                                                               @RequestBody LlmRequestDto dto,
                                                               @AuthenticationPrincipal User user){
-        String optimizedPrompt=promptService.optimizingPrompt(dto,user,promptId);
-        PromptAnswerDto result=llmService.seperateAnswers(promptId,optimizedPrompt);
+
+        List<Map<LLMModel,String>> result=promptService.runByModel(dto);
+//        PromptAnswerDto result=llmService.seperateAnswers(promptId,optimizedPrompt);
 //        sourcesService.saveSources(result); //출처 저장은 ai 교차 검증 시에 하는걸로..
         return ResponseEntity.ok(result);
     }

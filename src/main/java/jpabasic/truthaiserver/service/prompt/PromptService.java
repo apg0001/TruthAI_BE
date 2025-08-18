@@ -7,6 +7,7 @@ import jpabasic.truthaiserver.domain.Prompt;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
+import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
@@ -15,9 +16,14 @@ import org.springframework.stereotype.Service;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static jpabasic.truthaiserver.domain.LLMModel.GPT;
+import static java.util.stream.Collectors.toMap;
+import static jpabasic.truthaiserver.domain.LLMModel.*;
 import static jpabasic.truthaiserver.exception.ErrorMessages.PROMPT_GENERATE_ERROR;
 import static jpabasic.truthaiserver.exception.ErrorMessages.PROMPT_NOT_FOUND;
 
@@ -93,21 +99,56 @@ public class PromptService {
         return promptEngine.execute("summarize",prompt);
     }
 
-    //최적화 프롬프트 실행(현재는 gpt로만)
-    public String optimizingPrompt(LlmRequestDto dto,User user,Long promptId) {
-        String answer= promptEngine.execute("optimized",dto);
-        LLMModel model=GPT;
-        saveAnswer(answer,user,promptId,model);
-        return answer;
+    public List<Map<LLMModel,String>> runByModel(LlmRequestDto request){
+        Map<LLMModel,String> answer=request.getModels().stream()
+                .map(LLMModel::fromString)
+                .collect(toMap(
+                        Function.identity(),
+                        (LLMModel model)->switch(model) {
+                            case GPT ->
+                                    promptEngine.getOptimizedAnswerByGpt("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                            case CLAUDE ->
+                                    promptEngine.getOptimizedAnswerByClaude("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                            case GEMINI ->
+                                    promptEngine.getOptimizedAnswerByGemini("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                            case PERPLEXITY -> null;
+                        },
+                        (a,b)->a,
+                        ()->new EnumMap<>(LLMModel.class)));
+
+
+                return List.of(answer);
+    }
+
+    //최적화 프롬프트 실행(현재는 gpt로만) //⭐병렬 처리 위한 함수
+    public void optimizingPrompt(LlmRequestDto dto,User user,Long promptId) {
+        //최적화된 프롬프트 반환
+        List<Message> answer= promptEngine.getOptimizedPrompt("optimized",dto);
+
+        //모델 리스트 String -> ENUM
+        List<String> models=dto.getModels();
+        List<LLMModel> llmModels=models.stream()
+                        .map(LLMModel::fromString)
+                                .toList();
+
+
+
+//        saveAnswer(answer,user,promptId,llmModels);
+////        return answer;
     }
 
 
-    
     //최적화된 프롬프트 반환
-    public String getOptimizedPrompt(LlmRequestDto dto,Long promptId) {
+    public List<Message> getOptimizedPrompt(LlmRequestDto dto,Long promptId) {
 //        Long promptId=saveOriginalPrompt(dto,user);
-        String optimizedPrompt=promptEngine.optimizingPrompt(dto);
-        saveOptimizedPrompt(optimizedPrompt,promptId);
+        String templateKey=dto.getTemplateKey();
+
+        List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);
+
+        //db에 저장은 String type으로 ? -> List<Message>로 수정할수도.
+        String optimizedPromptSt=optimizedPrompt.toString();
+        saveOptimizedPrompt(optimizedPromptSt,promptId);
+
         return optimizedPrompt;
     }
 

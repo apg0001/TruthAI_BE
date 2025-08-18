@@ -3,29 +3,18 @@ package jpabasic.truthaiserver.service;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
-import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
-import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
-import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
-import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
-import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 
 import static jpabasic.truthaiserver.domain.LLMModel.CLAUDE;
 import static jpabasic.truthaiserver.domain.LLMModel.GPT;
 import static jpabasic.truthaiserver.domain.LLMModel.GEMINI;
-import static jpabasic.truthaiserver.domain.LLMModel.PERPLEXITY;
-import static jpabasic.truthaiserver.exception.ErrorMessages.PROMPT_NOT_FOUND;
 
 @Service
 @Slf4j

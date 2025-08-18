@@ -1,15 +1,13 @@
 package jpabasic.truthaiserver.service;
 
-import jpabasic.truthaiserver.dto.LLMResultDto;
 import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequest;
+import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
-import jpabasic.truthaiserver.repository.AnswerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -50,9 +48,28 @@ public class LlmService {
         return gptClient(request);
     }
 
+    public String createClaudeAnswer(String question) {
+        ClaudeRequestDto request=new ClaudeRequestDto(question);
+        return claudeClient(request);
+    }
+
+    public String createGeminiAnswer(String question) {
+        GeminiRequestDto request = GeminiRequestDto.fromText(null,question);
+        return geminiClient(request);
+    }
+
     public String createGptAnswerWithPrompt(List<Message> messageList){
         ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList);
         return gptClient(request);
+    }
+
+    public String createClaudeAnswerWithPrompt(ClaudeRequestDto request){
+//        ClaudeRequestDto request=new ClaudeRequestDto(messageList);
+        return claudeClient(request);
+    }
+
+    public String createGeminiAnswerWithPrompt(GeminiRequestDto request){
+        return geminiClient(request);
     }
 
     //LLM 응답을 dto로 반환
@@ -72,13 +89,13 @@ public class LlmService {
     }
 
 
-    public String createClaudeAnswer(String question){
+    public String claudeClient(ClaudeRequestDto request){
 
-        ClaudeRequest request=new ClaudeRequest("claude-3-5-sonnet-20241022",question);
+//        ClaudeRequest request=new ClaudeRequest("claude-3-5-sonnet-20241022",question);
 
         //WebClient로 ClaudeAI로 호출
         ClaudeResponse claudeResponse=claudeClient.post()
-                .uri("")
+                .uri("/v1/messages")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(ClaudeResponse.class)
@@ -88,9 +105,9 @@ public class LlmService {
     }
 
 
-    public String createGeminiAnswer(String question){
+    public String geminiClient(GeminiRequestDto request){
 
-        GeminiRequestDto request = GeminiRequestDto.fromText(question);
+//        GeminiRequestDto request = GeminiRequestDto.fromText(question);
 
         //WebClient로 gemini 호출
         GeminiResponseDto response = geminiClient.post()
