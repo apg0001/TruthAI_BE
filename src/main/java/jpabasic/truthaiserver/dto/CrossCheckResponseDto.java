@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CrossCheckResponseDto {
-    private Long promptId;
-    private List<LLMResultDto> llmResultDtoList;
+    private String coreTitle;
+    private String coreStatement;
+    private CrossCheckModelDto gpt;
+    private CrossCheckModelDto claude;
+    private CrossCheckModelDto gemini;
+    private CrossCheckModelDto perplexity;
 }
