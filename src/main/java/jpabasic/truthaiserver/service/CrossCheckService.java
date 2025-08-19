@@ -185,64 +185,46 @@ public class CrossCheckService {
     }
 
     /**
-     * 모델 점수 계산:
-     * 1) target 모델의 각 문장 임베딩과
-     * 2) 다른 모델들의 "문서 임베딩"(= 그 모델의 모든 문장 임베딩 평균)
-     * 간 코사인 유사도를 구해 평균 → 그 문장의 점수
-     * 최종 점수 = 해당 모델의 문장 점수들의 평균
+     * 모델 점수 계산(개선):
+     * - 타겟 모델의 각 문장 임베딩과 "다른 모델들의 모든 문장 임베딩" 간 코사인 유사도를 계산
+     * - 해당 문장의 점수 = 그 중 최대 유사도
+     * - 최종 점수 = 타겟 모델 문장 점수들의 평균
      */
     private double calculateScore(String targetModel, Map<String, List<String>> modelToSentences) {
         List<String> targetSentences = modelToSentences.get(targetModel);
         if (targetSentences == null || targetSentences.isEmpty()) return 0.0;
 
-        // 1) 다른 모델들의 문서 임베딩을 미리 계산 (한 번만)
-        Map<String, float[]> otherModelDocEmb = new HashMap<>();
-        for (Map.Entry<String, List<String>> e : modelToSentences.entrySet()) {
-            String model = e.getKey();
-            if (model.equals(targetModel)) continue;
+        // 1) 다른 모델들의 모든 문장 임베딩 수집
+        List<float[]> otherSentenceEmbeddings = new ArrayList<>();
+        for (Map.Entry<String, List<String>> entry : modelToSentences.entrySet()) {
+            String modelName = entry.getKey();
+            if (modelName.equals(targetModel)) continue;
 
-            List<String> sents = e.getValue();
-            if (sents == null || sents.isEmpty()) continue;
-
-            // 문서 임베딩 = 문장 임베딩들의 평균
-            List<float[]> sentEmbs = new ArrayList<>(sents.size());
-            for (String s : sents) {
-                sentEmbs.add(embeddingService.embed(s));
+            List<String> sentences = entry.getValue();
+            if (sentences == null || sentences.isEmpty()) continue;
+            for (String s : sentences) {
+                otherSentenceEmbeddings.add(embeddingService.embed(s));
             }
-            // 평균(차원 맞춤)
-            int dim = embeddingService.getDim();
-            float[] docEmb = new float[dim];
-            if (!sentEmbs.isEmpty()) {
-                for (float[] v : sentEmbs) {
-                    for (int i = 0; i < dim; i++) docEmb[i] += v[i];
-                }
-                float inv = 1f / sentEmbs.size();
-                for (int i = 0; i < dim; i++) docEmb[i] *= inv;
-            }
-            otherModelDocEmb.put(model, docEmb);
         }
 
-        if (otherModelDocEmb.isEmpty()) return 0.0;
+        if (otherSentenceEmbeddings.isEmpty()) return 0.0;
 
-        // 2) 타겟 모델의 각 문장 점수 = (다른 모델 문서 임베딩들과의 유사도) 평균
+        // 2) 타겟 모델의 각 문장 점수 = (타 모델 모든 문장과의 유사도) 중 최대값
         double totalSentenceScore = 0.0;
         int sentenceCount = 0;
 
-        for (String sent : targetSentences) {
-            float[] sentEmb = embeddingService.embed(sent);
-
-            double sumSim = 0.0;
-            int pairCnt = 0;
-            for (Map.Entry<String, float[]> e : otherModelDocEmb.entrySet()) {
-                double sim = EmbeddingService.cosine(sentEmb, e.getValue());
-                sumSim += sim;
-                pairCnt++;
+        for (String sentence : targetSentences) {
+            float[] targetEmbedding = embeddingService.embed(sentence);
+            double maxSimilarity = -1.0;
+            for (float[] otherEmbedding : otherSentenceEmbeddings) {
+                double sim = EmbeddingService.cosine(targetEmbedding, otherEmbedding);
+                if (sim > maxSimilarity) maxSimilarity = sim;
             }
-            double sentenceScore = (pairCnt > 0) ? (sumSim / pairCnt) : 0.0;
+            double sentenceScore = (maxSimilarity >= 0.0) ? maxSimilarity : 0.0;
 
-            // (옵션) 디버그 로그
-            log.info("Score debug | model={} | sentence='{}' | pairs={} | avg={}",
-                    targetModel, sent, pairCnt, sentenceScore);
+            // 디버그 로그
+            log.info("Score debug | model={} | sentence='{}' | compared={} | max={}",
+                    targetModel, sentence, otherSentenceEmbeddings.size(), sentenceScore);
 
             totalSentenceScore += sentenceScore;
             sentenceCount++;
