@@ -4,9 +4,10 @@ import org.springframework.transaction.annotation.Transactional;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Claim;
 import jpabasic.truthaiserver.domain.Source;
-import jpabasic.truthaiserver.dto.CrossCheckResponseDto;
-import jpabasic.truthaiserver.dto.LLMResultDto;
 import jpabasic.truthaiserver.dto.CrossCheckListDto;
+import jpabasic.truthaiserver.dto.CrossCheckModelDto;
+import jpabasic.truthaiserver.dto.CrossCheckReferenceDto;
+import jpabasic.truthaiserver.dto.CrossCheckResponseDto;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.ClaimRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CrossCheckService {
     private final AnswerRepository answerRepository;
     private final ClaimRepository claimRepository;
     private final EmbeddingService embeddingService;
+    private final jpabasic.truthaiserver.repository.SourceRepository sourceRepository;
 
     // 임계값(필요하면 yml로 뺄 것)
     private static final double SENTENCE_SIM_THRESHOLD = 0.82;
@@ -47,10 +49,15 @@ public class CrossCheckService {
         // 2) 전체 문장 유니크 셋
         Set<String> universe = getAllUniqueSentences(modelToSentences);
 
+        // 공통 주장 후보 추출을 위한 최빈(가장 많은 모델이 동의) 문장 선택
+        String coreStatement = null;
+        int coreAgreeCount = -1;
+
         // 3) 각 모델이 해당 문장을 '포함한다'고 볼지(임베딩 유사도로 판단)
         List<Claim> savedClaims = new ArrayList<>();
         for (String pivot : universe) {
             float[] pivotEmb = embeddingService.embed(pivot);
+            int agreeCount = 0;
             for (Answer answer : answers) {
                 boolean contains = modelToSentences.get(answer.getModel().name())
                         .stream()
@@ -59,33 +66,30 @@ public class CrossCheckService {
                             return sim >= SENTENCE_SIM_THRESHOLD;
                         });
                 if (contains) {
+                    agreeCount++;
                     Claim claim = new Claim(pivot, 1.0f, answer);
                     savedClaims.add(claimRepository.save(claim));
-//                    log.info("claim: ", claim);
                 }
+            }
+            if (agreeCount > coreAgreeCount) {
+                coreAgreeCount = agreeCount;
+                coreStatement = pivot;
             }
         }
 
-        // 모델 -> score/opinion 임시 보관
-        Map<String, LLMResultDto> byModel = new HashMap<>();
-
-        // 4) 점수/의견 산출
-        List<LLMResultDto> resultList = new ArrayList<>();
+        // 모델별 점수 계산 및 레퍼런스 수집
+        Map<String, Double> modelToScore = new HashMap<>();
         for (String model : modelToSentences.keySet()) {
             double score = calculateScore(model, modelToSentences);
-            double validUrlRatio = evalSource(savedClaims);
-            String opinion = generateOpinion(score, validUrlRatio);
-
-            LLMResultDto dto = new LLMResultDto(model, opinion, score);
-            resultList.add(new LLMResultDto(model, opinion, score));
-            byModel.put(model, dto);
+            modelToScore.put(model, score);
         }
 
-        // 계산 결과를 해당 프롬프트의 Answer 엔티티에 반영
+        // 계산 결과를 해당 프롬프트의 Answer 엔티티에 반영 (기존 opinion/score 유지 로직 보존)
         for (Answer a : answers) {
-            LLMResultDto dto = byModel.get(a.getModel().name());
-            if (dto != null) {
-                a.updateOpinionAndScore(dto.getOpinion(), (float) dto.getScore());
+            Double score = modelToScore.get(a.getModel().name());
+            if (score != null) {
+                String opinion = generateOpinion(score, 0.0);
+                a.updateOpinionAndScore(opinion, (float) score.doubleValue());
             }
         }
 
@@ -93,7 +97,33 @@ public class CrossCheckService {
         answerRepository.saveAll(answers);
         answerRepository.flush();
 
-        return new CrossCheckResponseDto(promptId, resultList);
+        // 프롬프트 요약으로 coreTitle 설정 (없으면 원문 프롬프트 사용)
+        String coreTitle = null;
+        if (!answers.isEmpty() && answers.get(0).getPrompt() != null) {
+            var prompt = answers.get(0).getPrompt();
+            coreTitle = (prompt.getSummary() != null && !prompt.getSummary().isBlank())
+                    ? prompt.getSummary() : prompt.getOriginalPrompt();
+        }
+
+        // 모델명 -> Answer 매핑 및 레퍼런스 구성
+        Map<String, Answer> modelToAnswer = new HashMap<>();
+        for (Answer a : answers) {
+            modelToAnswer.put(a.getModel().name(), a);
+        }
+
+        CrossCheckModelDto gptDto = buildModelDto("GPT", modelToAnswer, modelToScore);
+        CrossCheckModelDto claudeDto = buildModelDto("CLAUDE", modelToAnswer, modelToScore);
+        CrossCheckModelDto geminiDto = buildModelDto("GEMINI", modelToAnswer, modelToScore);
+        CrossCheckModelDto perplexityDto = buildModelDto("PERPLEXITY", modelToAnswer, modelToScore);
+
+        return new CrossCheckResponseDto(
+                coreTitle,
+                coreStatement,
+                gptDto,
+                claudeDto,
+                geminiDto,
+                perplexityDto
+        );
     }
 
     /**
@@ -234,6 +264,35 @@ public class CrossCheckService {
         else sb.append(" | 출처 없음/전부 무효");
 
         return sb.toString();
+    }
+
+    private CrossCheckModelDto buildModelDto(
+            String modelName,
+            Map<String, Answer> modelToAnswer,
+            Map<String, Double> modelToScore
+    ) {
+        Answer answer = modelToAnswer.get(modelName);
+        if (answer == null) return null;
+
+        java.util.List<Source> sources = sourceRepository.findByAnswerId(answer.getId());
+        java.util.List<CrossCheckReferenceDto> references = sources.stream()
+                .map(s -> new CrossCheckReferenceDto(
+                        s.getSourceTitle(),
+                        s.getSourceSummary(),
+                        s.getSourceUrl()
+                ))
+                .collect(java.util.stream.Collectors.toList());
+
+        Double scoreOrNull = modelToScore.get(modelName);
+        double score = scoreOrNull != null ? scoreOrNull : 0.0;
+        int similarityPercent = (int) Math.round(Math.max(0.0, Math.min(1.0, score)) * 100.0);
+
+        int hallucinationLevel;
+        if (score >= 0.8) hallucinationLevel = 0;
+        else if (score >= 0.5) hallucinationLevel = 1;
+        else hallucinationLevel = 2;
+
+        return new CrossCheckModelDto(hallucinationLevel, similarityPercent, references);
     }
 
 
