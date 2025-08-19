@@ -1,62 +1,81 @@
 package jpabasic.truthaiserver.service;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-
-
 import jpabasic.truthaiserver.dto.GoogleInfoDto;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
+import java.util.Map;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuthService {
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
 
-    public GoogleInfoDto authenticate(String token) {
-        return extractUserInfoFromToken(token);
-    }
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    private String clientSecret;
 
-    private GoogleInfoDto extractUserInfoFromToken(String token) {
-        try {
-            log.info("token : {}", token);
-            GoogleIdTokenVerifier verifier = createGoogleIdTokenVerifier();
+    private final WebClient.Builder webClientBuilder;
 
-            GoogleIdToken idToken = verifier.verify(token);
-            if (idToken == null) {
-                throw new RuntimeException("Invalid Google ID Token");
-            }
+    /**
+     * authorization code를 받아 access_token → userinfo 순으로 조회하여 사용자 정보를 반환
+     */
+    public GoogleInfoDto authenticate(String authorizationCode, String redirectUri) {
+        WebClient webClient = webClientBuilder.build();
 
-            GoogleIdToken.Payload payload = idToken.getPayload();
-            return convertPayloadToGoogleInfoDto(payload);
+        // 1) authorization code로 access_token 교환
+        TokenResponse token = webClient.post()
+                .uri("https://oauth2.googleapis.com/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData("code", authorizationCode)
+                        .with("client_id", clientId)
+                        .with("client_secret", clientSecret)
+                        .with("redirect_uri", redirectUri)
+                        .with("grant_type", "authorization_code"))
+                .retrieve()
+                .bodyToMono(TokenResponse.class)
+                .block();
 
-        } catch (GeneralSecurityException | IOException e) {
-            throw new RuntimeException("Token validation failed", e);
+        if (token == null || token.access_token == null) {
+            throw new RuntimeException("구글 access_token 발급 실패");
         }
+
+        // 2) access_token으로 userinfo 조회
+        GoogleUserInfoResponse user = webClient.get()
+                .uri("https://www.googleapis.com/oauth2/v3/userinfo")
+                .headers(h -> h.setBearerAuth(token.access_token))
+                .retrieve()
+                .bodyToMono(GoogleUserInfoResponse.class)
+                .block();
+
+        if (user == null || user.email == null) {
+            throw new RuntimeException("구글 userinfo 조회 실패");
+        }
+
+        return new GoogleInfoDto(user.email, user.name != null ? user.name : user.sub, user.picture);
     }
 
-    private GoogleInfoDto convertPayloadToGoogleInfoDto(GoogleIdToken.Payload payload) {
-        String email = payload.getEmail();
-        String name = (String) payload.get("name");
-        String pictureUrl = (String) payload.get("picture");
-
-        return new GoogleInfoDto(email, name, pictureUrl);
+    // token 응답 DTO (내부 전용)
+    static class TokenResponse {
+        public String access_token;
+        public String id_token;
+        public String refresh_token;
+        public String token_type;
+        public Integer expires_in;
     }
 
-    private GoogleIdTokenVerifier createGoogleIdTokenVerifier() {
-        return new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
-                .setAudience(Collections.singletonList(clientId))
-                .build();
+    // userinfo 응답 DTO (내부 전용)
+    static class GoogleUserInfoResponse {
+        public String sub;      // 구글 고유 ID
+        public String email;
+        public String name;
+        public String picture;
     }
-
-
 }
