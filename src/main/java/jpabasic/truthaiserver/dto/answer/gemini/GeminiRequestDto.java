@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.dto.answer.gemini;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,14 @@ import java.util.List;
 @AllArgsConstructor
 public class GeminiRequestDto {
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private SystemInstruction systemInstruction; //시스템 프롬프트
+
     private List<Contents> contents; //대화 기록
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private GenerationConfig generationConfig;
+
 
     public static GeminiRequestDto fromText(String systemPrompt,String text) {
         return new GeminiRequestDto(
@@ -23,6 +29,17 @@ public class GeminiRequestDto {
                 new GenerationConfig(1024,0.0,null)
         );
     }
+
+    public static GeminiRequestDto send(String text) {
+
+        return new GeminiRequestDto(
+                null,
+                List.of(new Contents(List.of(new Part(text)))),
+                new GenerationConfig(1024, 0.0, null)
+        );
+    }
+
+
 
     @Data
     @NoArgsConstructor

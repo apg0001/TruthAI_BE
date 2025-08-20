@@ -94,7 +94,7 @@ public class LlmTestController {
                 .bodyToMono(GeminiResponseDto.class)
                 .block();
         return response
-                .getCandidates()
+                .getCandidates().get(0)
                 .getContent()
                 .getParts().get(0)
                 .getText();

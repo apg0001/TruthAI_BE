@@ -33,17 +33,7 @@ public class LlmRequestDto {
 
     private String templateKey;
 
-    public List<LLMModel> toModelEnums(){
-        return models.stream()
-                .map(model->{
-                    try{
-                        return LLMModel.valueOf(model.toUpperCase());
-                    }catch(IllegalArgumentException e){
-                        throw new BusinessException(ErrorMessages.ENUM_ERROR);
-                    }
-                })
-                .collect(Collectors.toList());
-    }
+
 
 
 }
