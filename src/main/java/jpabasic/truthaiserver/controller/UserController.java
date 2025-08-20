@@ -16,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import jpabasic.truthaiserver.service.AuthService;
 
 
@@ -72,6 +69,20 @@ public class UserController {
 
         PersonaResponse res=userFindService.setPersona(req, email);
 
+        return ResponseEntity.ok(res);
+    }
+
+
+    @GetMapping("/persona")
+    @Operation(summary = "유저 기본 설정한 페르소나 조회")
+    public ResponseEntity<PersonaResponse> getPersona(
+            @AuthenticationPrincipal String email){
+
+        User user=userFindService.findUserByEmail(email)
+                .orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+
+        String persona=user.getUserBaseInfo().getPersona();
+        PersonaResponse res=new PersonaResponse(persona);
         return ResponseEntity.ok(res);
     }
 }

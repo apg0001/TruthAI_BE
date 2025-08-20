@@ -23,6 +23,7 @@ public class UserFindService {
         return userRepository.findByUserBaseInfo_Email(email);
     }
 
+
     @Transactional
     public PersonaResponse setPersona(PersonaRequest personaRequest,String email) {
         User user=findUserByEmail(email)
