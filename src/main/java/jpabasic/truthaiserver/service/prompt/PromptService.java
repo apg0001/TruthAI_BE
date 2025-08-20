@@ -8,6 +8,7 @@ import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
+import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
 import jpabasic.truthaiserver.dto.sources.SourcesDto;
@@ -78,7 +79,7 @@ public class PromptService {
 
 
     //최적화 전 프롬프트 저장
-    public Long saveOriginalPrompt(LlmRequestDto request,User user) {
+    public Long saveOriginalPrompt(OptPromptRequestDto request, User user) {
         String originalPrompt=request.getQuestion();
 
         Prompt prompt=new Prompt(originalPrompt,new ArrayList<>(),user); //answer는 저장 전
@@ -137,22 +138,10 @@ public class PromptService {
                 return List.of((Map<LLMModel, LLMResponseDto>) answer);
     }
 
-    //최적화 프롬프트 실행(현재는 gpt로만) //⭐병렬 처리 위한 함수
-    public void optimizingPrompt(LlmRequestDto dto,User user,Long promptId) {
-        //최적화된 프롬프트 반환
-        List<Message> answer= promptEngine.getOptimizedPrompt("optimized",dto);
-
-        //모델 리스트 String -> ENUM
-        List<String> models=dto.getModels();
-        List<LLMModel> llmModels=models.stream()
-                        .map(LLMModel::fromString)
-                                .toList();
-
-    }
 
 
     //최적화된 프롬프트 반환
-    public List<Message> getOptimizedPrompt(LlmRequestDto dto,Long promptId) {
+    public List<Message> getOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
 //        Long promptId=saveOriginalPrompt(dto,user);
         String templateKey=dto.getTemplateKey();
 

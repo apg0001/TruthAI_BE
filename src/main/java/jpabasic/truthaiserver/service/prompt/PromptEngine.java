@@ -9,10 +9,7 @@ import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
-import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
-import jpabasic.truthaiserver.dto.prompt.ClaudeAdapter;
-import jpabasic.truthaiserver.dto.prompt.GeminiAdapter;
-import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
+import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.service.LlmService;
@@ -136,7 +133,7 @@ public class PromptEngine {
 
 
     //optimized prompt 반환
-    List<Message> getOptimizedPrompt(String templateKey, LlmRequestDto request){
+    List<Message> getOptimizedPrompt(String templateKey, OptPromptRequestDto request){
         Message message=new Message(request.getQuestion());
         String persona=request.getPersona();
         PromptDomain domain=request.getPromptDomain();

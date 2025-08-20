@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.dto.answer;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jpabasic.truthaiserver.domain.LLMModel;
@@ -20,6 +21,7 @@ public class LlmRequestDto {
 
     @Schema(description="model 선택. gpt, claude, gemini 중 선택한 것 들을 리스트로 주세요.")
     @NotBlank(message="모델을 선택해주세요.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<String> models;
 
     @NotBlank(message="프롬프트를 작성해주세요.")
