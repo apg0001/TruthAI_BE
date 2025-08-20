@@ -8,6 +8,7 @@ import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
+import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
 import jpabasic.truthaiserver.service.LlmService;
@@ -38,8 +39,8 @@ public class PromptController {
     }
 
     @PostMapping("/create-best")
-    @Operation(summary="최적화 프롬프트 생성")
-    public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody LlmRequestDto dto,@AuthenticationPrincipal(expression = "user") User user){
+    @Operation(summary="최적화 프롬프트 생성",description = "templateKey 값은 optimzied로 주세요.")
+    public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal User user){
         Long promptId=promptService.saveOriginalPrompt(dto,user);
         List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
 

@@ -21,14 +21,17 @@ import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.w3c.dom.Text;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,7 +97,8 @@ public class LlmService {
     }
 
     public String createGeminiAnswer(String question) {
-        GeminiRequestDto request = GeminiRequestDto.fromText(null,question);
+        GeminiRequestDto request = GeminiRequestDto.send(question);
+        System.out.println("🏃GeminiRequestDto:"+request);
         return geminiClient(request);
     }
 
@@ -357,9 +361,10 @@ public class LlmService {
 
 //        ClaudeRequestDto request=new ClaudeRequestdto("claude-3-5-sonnet-20241022",question);
 
+
         //WebClient로 ClaudeAI로 호출
         ClaudeResponse claudeResponse=claudeClient.post()
-                .uri("")
+                .uri("/v1/messages")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(ClaudeResponse.class)
@@ -373,21 +378,26 @@ public class LlmService {
 
     public String geminiClient(GeminiRequestDto request){
 
-//        GeminiRequestDto request = GeminiRequestDto.fromText(question);
-
-        //WebClient로 gemini 호출
-        GeminiResponseDto response = geminiClient.post()
-                .uri(uriBuilder -> uriBuilder.queryParam("key", geminiApiKey).build())
+        GeminiResponseDto response = WebClient.builder()
+                .baseUrl("https://generativelanguage.googleapis.com/v1beta")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("x-goog-api-key", geminiApiKey) // ✅ 헤더 방식으로 키 전달
+                .build()
+                .post()
+                .uri("/models/gemini-2.0-flash:generateContent") // ✅ key는 queryParam 안 써도 됨
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(GeminiResponseDto.class)
                 .block();
+
         return response
-                .getCandidates()
+                .getCandidates().get(0)
                 .getContent()
                 .getParts().get(0)
                 .getText();
+
     }
+
 
 //    public String createPerplexityAnswer(String question){
 //

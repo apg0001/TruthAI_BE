@@ -4,7 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
+
+
 
 @Configuration
 @Slf4j
@@ -63,7 +66,7 @@ public class AiConfig {
     @Bean
     public WebClient geminiClient(){
         return webClientBuilder
-                .baseUrl(geminiApiUrl)
+                .baseUrl("https://generativelanguage.googleapis.com/v1beta")
                 .build();
     }
 
@@ -71,7 +74,7 @@ public class AiConfig {
     public WebClient perplexityClient(){
         return webClientBuilder
                 .baseUrl(perplexityApiUrl)
-                .defaultHeader("Authorization","Bearer "+perplexityApiKey)
+//                .defaultHeader("Authorization","Bearer "+perplexityApiKey)
                 .build();
     }
 

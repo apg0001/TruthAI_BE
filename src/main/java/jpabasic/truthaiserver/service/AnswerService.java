@@ -44,21 +44,21 @@ public class AnswerService {
 
         return models.stream()
                 .map(model -> switch (model) {
-                    case GPT -> saveLlmAnswer(GPT, llmService.createGptAnswer(question));
-                    case CLAUDE -> saveLlmAnswer(CLAUDE, llmService.createClaudeAnswer(question));
+                    case GPT -> toDto(GPT, llmService.createGptAnswer(question));
+                    case CLAUDE -> toDto(CLAUDE, llmService.createClaudeAnswer(question));
                     //            case PERPLEXITY -> new LlmAnswerDto(PERPLEXITY, createAnswer(PERPLEXITY));
-                    case GEMINI -> saveLlmAnswer(GEMINI, llmService.createGeminiAnswer(question));
+                    case GEMINI -> toDto(GEMINI, llmService.createGeminiAnswer(question));
                     default -> throw new BusinessException(ErrorMessages.LLM_MODEL_ERROR);
                 })
                 .toList();
     }
 
 
-    public LlmAnswerDto saveLlmAnswer(LLMModel model,String answer){
+    public LlmAnswerDto toDto(LLMModel model,String answer){
 
         LlmAnswerDto answerDto = new LlmAnswerDto(model,answer);
-        Answer answerEntity=answerDto.toEntity();
-        answerRepository.save(answerEntity);
+//        Answer answerEntity=answerDto.toEntity();
+//        answerRepository.save(answerEntity);
         return answerDto;
 
     }
