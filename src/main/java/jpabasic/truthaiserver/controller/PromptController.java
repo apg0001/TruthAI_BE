@@ -4,15 +4,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.domain.User;
+import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
+import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
+import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
 import jpabasic.truthaiserver.service.LlmService;
-import jpabasic.truthaiserver.service.SourcesService;
+import jpabasic.truthaiserver.service.sources.SourcesService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -56,20 +58,21 @@ public class PromptController {
 //    }
 
     @PostMapping("/get-best/organized")
-    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "현재는 아직 gpt만 가능합니다.")
-    public ResponseEntity<List<Map<LLMModel,PromptAnswerDto>>> getOrganizedAnswer(@RequestParam Long promptId,
+    @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "gpt, claude, gemini 사용 가능")
+    public ResponseEntity<List<Map<LLMModel,PromptResultDto>>> getOrganizedAnswer(@RequestParam Long promptId,
                                                               @RequestBody LlmRequestDto dto,
                                                               @AuthenticationPrincipal User user){
 
         //최적화 프롬프트 받고 응답 받기
-        List<Map<LLMModel,String>> response=promptService.runByModel(dto);
+        List<Map<LLMModel,LLMResponseDto>> response=promptService.runByModel(dto);
 
         //answer,sources 나눠서 응답 받기
-        List<Map<LLMModel,PromptAnswerDto>> result=llmService.seperateAnswers(promptId,response);
+//        List<Map<LLMModel,PromptAnswerDto>> seperatedAnswers=llmService.seperateAnswers(promptId,response);
 
         //응답 내용 저장
-        Long answerId=promptService.saveAnswers(result,user);
-        sourcesService.saveSources(result); //출처 저장은 ai 교차 검증 시에 하는걸로..
+        List<Map<LLMModel, PromptResultDto>> result=promptService.saveAnswers(response,user,promptId);
+
+        //정돈된 source로 응답
         return ResponseEntity.ok(result);
     }
 

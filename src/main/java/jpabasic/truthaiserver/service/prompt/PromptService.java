@@ -1,29 +1,29 @@
 package jpabasic.truthaiserver.service.prompt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.transaction.Transactional;
-import jpabasic.truthaiserver.domain.Answer;
-import jpabasic.truthaiserver.domain.LLMModel;
-import jpabasic.truthaiserver.domain.Prompt;
-import jpabasic.truthaiserver.domain.User;
+import jpabasic.truthaiserver.domain.*;
+import jpabasic.truthaiserver.dto.answer.AnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
+import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
+import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.sources.SourcesDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
+import jpabasic.truthaiserver.service.sources.SourcesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
-import static jpabasic.truthaiserver.domain.LLMModel.*;
-import static jpabasic.truthaiserver.exception.ErrorMessages.PROMPT_GENERATE_ERROR;
-import static jpabasic.truthaiserver.exception.ErrorMessages.PROMPT_NOT_FOUND;
+import static jpabasic.truthaiserver.exception.ErrorMessages.*;
 
 
 @Service
@@ -33,12 +33,16 @@ public class PromptService {
     private final PromptRepository promptRepository;
     private final PromptEngine promptEngine;
     private final AnswerRepository answerRepository;
+    private final SourcesService sourcesService;
 
 
-    public PromptService(PromptRepository promptRepository, PromptEngine promptEngine,AnswerRepository answerRepository) {
+    public PromptService(
+            PromptRepository promptRepository,
+            PromptEngine promptEngine,AnswerRepository answerRepository,SourcesService sourcesService) {
         this.promptRepository = promptRepository;
         this.promptEngine = promptEngine;
         this.answerRepository = answerRepository;
+        this.sourcesService = sourcesService;
     }
 
 
@@ -97,25 +101,40 @@ public class PromptService {
         return promptEngine.execute("summarize",prompt);
     }
 
-    public List<Map<LLMModel,String>> runByModel(LlmRequestDto request){
-        Map<LLMModel,String> answer=request.getModels().stream()
+    public List<Map<LLMModel,LLMResponseDto>> runByModel(LlmRequestDto request){
+        Map<LLMModel,?> answer=request.getModels().stream()
                 .map(LLMModel::fromString)
                 .collect(toMap(
                         Function.identity(),
                         (LLMModel model)->switch(model) {
-                            case GPT ->
-                                    promptEngine.getOptimizedAnswerByGpt("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
-                            case CLAUDE ->
-                                    promptEngine.getOptimizedAnswerByClaude("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
-                            case GEMINI ->
-                                    promptEngine.getOptimizedAnswerByGemini("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                            case GPT -> {
+                                try {
+                                    yield promptEngine.getStructuredAnswerByGpt("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                            case CLAUDE -> {
+                                try {
+                                    yield promptEngine.getStructuredAnswerByClaude("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                            case GEMINI -> {
+                                try {
+                                    yield promptEngine.getStructuredAnswerByClaude("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
                             case PERPLEXITY -> null;
                         },
                         (a,b)->a,
                         ()->new EnumMap<>(LLMModel.class)));
 
 
-                return List.of(answer);
+                return List.of((Map<LLMModel, LLMResponseDto>) answer);
     }
 
     //최적화 프롬프트 실행(현재는 gpt로만) //⭐병렬 처리 위한 함수
@@ -152,26 +171,48 @@ public class PromptService {
 
     //LLM 응답 저장
     @Transactional
-    public void saveAnswers(List<Map<LLMModel, PromptAnswerDto>> raw,User user) {
+    public List<Map<LLMModel,PromptResultDto>> saveAnswers(List<Map<LLMModel, LLMResponseDto>> raw, User user,Long promptId) {
 
-        raw.forEach(map->mapping(map,user));
-
+//        raw.forEach(map->mapping(map,user));
+        return raw.stream()
+                .map(map->mapping(map,user,promptId))
+                .toList();
     }
 
-    //여러 개의 모델-답변 리스트 분리
-    public void mapping(Map<LLMModel,PromptAnswerDto> map,User user) {
-       map.forEach((model,dto)->saveOne(model,dto,user));
+    public Map<LLMModel,PromptResultDto> mapping(Map<LLMModel,LLMResponseDto> map,User user,Long promptId) {
+       return map.entrySet().stream()
+               .collect(toMap(
+                       Map.Entry::getKey,
+                       e->saveOne(e.getKey(),e.getValue(),user,promptId),
+                       (a,b)->a,
+                       ()->new EnumMap<>(LLMModel.class)
+               ));
     }
 
-    //Answer Entity db에 저장
-    public void saveOne(LLMModel model,PromptAnswerDto dto,User user) {
+    public PromptResultDto saveOne(LLMModel model,LLMResponseDto dto,User user,Long promptId) {
 
-        Prompt prompt=promptRepository.findById(dto.promptId())
+        Prompt prompt=promptRepository.findById(promptId)
                 .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
 
+        //answer 저장
         String content=dto.answer();
         Answer entity=new Answer(content,model,prompt,user);
-        answerRepository.save(entity);
+        AnswerDto answerDto;
+
+        try {
+            answerRepository.save(entity);
+            answerDto=AnswerDto.from(entity);
+        }catch(BusinessException e) {
+            throw new BusinessException(ANSWER_SAVE_ERROR);
+        }
+
+        Long answerId=entity.getId();
+
+        //sources 저장
+        List<SourcesDto> sources=sourcesService.saveSources(dto,answerId);
+
+        PromptResultDto result=new PromptResultDto(answerDto,sources);
+        return result;
 
     }
 

@@ -1,16 +1,20 @@
-package jpabasic.truthaiserver.service;
+package jpabasic.truthaiserver.service.sources;
 
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Source;
+import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
+import jpabasic.truthaiserver.dto.sources.SourcesDto;
 import jpabasic.truthaiserver.exception.BusinessException;
+import jpabasic.truthaiserver.repository.AnswerRepository;
 import jpabasic.truthaiserver.repository.SourceRepository;
+import jpabasic.truthaiserver.service.AnswerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static jpabasic.truthaiserver.exception.ErrorMessages.SOURCE_URL_EMPTY;
+import static jpabasic.truthaiserver.exception.ErrorMessages.ANSWER_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -18,24 +22,33 @@ public class SourcesService {
 
     private final SourceRepository sourceRepository;
     private final AnswerService answerService;
+    private final AnswerRepository answerRepository;
 
-    public SourcesService(SourceRepository sourceRepository,AnswerService answerService) {
+    public SourcesService(SourceRepository sourceRepository, AnswerService answerService, AnswerRepository answerRepository) {
         this.sourceRepository = sourceRepository;
         this.answerService = answerService;
+        this.answerRepository = answerRepository;
     }
 
     //Sources 분리
     public List<Map<String,String>> separateUrl(PromptAnswerDto dto) {
         // 예시 입력(실사용 시 dto.sources() 등으로 대체)
         String sourceText=dto.sources();
-//        String sourceText = "Sources\n" +
-//                " - 한국경제TV, \"롤드컵 치르는 중인 LoL개미, 침착맨 티빙으로 영상 제공\", https://www.hankyung.com/entertainment/article/201910309907q\n" +
-//                " - KBS, \"2년만에 돌아온 '침착맨'...본명은 유준상, 백업 중에 입 닫은 이유는?\", https://entertain.v.daum.net/v/20200818132311568";
+        if(sourceText==null || sourceText.isEmpty()) return List.of();
 
         List<Map<String, String>> results = new ArrayList<>();
 
+        // 미리 전체 텍스트 정규화 (개행/공백/따옴표 등 최소 정리)
+        String normalized=sourceText
+                .replace("\r\n","\n")
+                .replace("\r","\n")
+                .replace("\t"," ")
+                .trim();
+
         // 줄 단위로 자르기 (CR/LF 모두 대응)
-        String[] lines = sourceText.split("\\r?\\n");
+        String[] lines = normalized.split("\n");
+
+
         for (String raw : lines) {
             String line = raw.trim();
             if (line.isEmpty()) continue;
@@ -76,25 +89,24 @@ public class SourcesService {
 
 
     //Sources 저장
-    public void saveSources(PromptAnswerDto dto) {
+    public List<SourcesDto> saveSources(LLMResponseDto dto, Long answerId) {
 
-        Answer answer=answerService.getAnswer(dto);
 
-        List<Map<String, String>> result = separateUrl(dto);
-        for (Map<String, String> source : result) {
-            String title = source.get("title");
-            String url = source.get("url");
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new BusinessException(ANSWER_NOT_FOUND));
 
-            System.out.println("title = " + title);
-            System.out.println("url = " + url);
+        List<LLMResponseDto.SourceResponseDto> sources=dto.sources();
+        List<SourcesDto> sourcesDtos = new ArrayList<>();
 
-            try {
-                Source newSource = new Source(title, url,answer);
-                sourceRepository.save(newSource);
-            } catch (Exception e) {
-                throw new BusinessException("SAVE_SOURCE_ERROR");
-            }
+        for (LLMResponseDto.SourceResponseDto s : sources) {
+            Source source=new Source(s.title(),s.url(),answer);
+            sourceRepository.save(source);
+
+            SourcesDto result=SourcesDto.toDto(source);
+            sourcesDtos.add(result);
         }
+
+        return sourcesDtos;
     }
 
 
