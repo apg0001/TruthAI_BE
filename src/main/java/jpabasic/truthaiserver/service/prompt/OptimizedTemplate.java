@@ -7,13 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class OptimizedTemplate extends BasePromptTemplate {
-    @Override
-    //도메인 + 페르소나
-    protected String systemIdentity(PromptDomain domain,String persona) {
 
-        return String.format("You are an expert %s advisor and educator for %s.",domain,persona);
-
-    }
 
 //    @Override
 //    protected String domainGuidelines() {
@@ -29,7 +23,6 @@ public class OptimizedTemplate extends BasePromptTemplate {
 
 
     @Override
-    //유저가 하는 질문
     protected String userContent(Message message) {
         String text=message.getContent();
         return """

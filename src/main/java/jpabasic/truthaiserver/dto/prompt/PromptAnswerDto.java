@@ -24,6 +24,9 @@ public record PromptAnswerDto(Long promptId,String answer, String sources) {
         );
     }
 
+    private static final Pattern URL_PATTERN =
+            Pattern.compile("(https?://[^\\s)]+)");
+
     private static String parseAnswer(String response){
         //##답변 이후 부터 ##Sources 전까지 추출
         String[] parts=response.split("## Sources",2);
@@ -35,39 +38,77 @@ public record PromptAnswerDto(Long promptId,String answer, String sources) {
     }
 
     private static String parseSources(String response) {
-
         if (response == null) return "[]";
 
-        try {
-            String[] parts = response.split("\n\n##\\s*Sources", 2); //## Sources, ##Sources 모두 허용
-            if (parts.length > 2) {
-                return "[]";
+        // 1) "Sources" 섹션 시작 지점 찾기 (## Sources / ##Sources / **Sources:** 등)
+        Pattern header = Pattern.compile("(?im)^\\s*(##\\s*Sources\\s*|\\*\\*Sources:?\\*\\*)\\s*$");
+        Matcher hm = header.matcher(response);
+        if (!hm.find()) return "[]"; // 섹션 못 찾음
+
+        String text = response.substring(hm.end()).trim();
+
+        // 2) 라인 단위 파싱: "- <name>[: ...]" 라인을 만나면 name을 기억하고,
+        //    그 다음 라인들에서 첫 번째 URL을 찾아 매칭
+        JSONArray jsonArray = new JSONArray();
+        String[] lines = text.split("\\R"); // 모든 개행 대응
+        String pendingName = null;
+
+        for (String raw : lines) {
+            String line = raw.trim();
+            if (line.isEmpty()) continue;
+
+            // 섹션 종료(다음 헤더) 신호가 보이면 중단 (옵션)
+            if (line.startsWith("##")) break;
+
+            // 2-1) 새 bullet 시작
+            if (line.startsWith("-")) {
+                // "- " 제거
+                String name = line.replaceFirst("^-\\s*", "");
+
+                // "이름: 제목" 형태면 콜론 앞까지만 이름으로 사용 (제목은 버림)
+                int colonIdx = name.indexOf(':');
+                if (colonIdx >= 0) {
+                    name = name.substring(0, colonIdx).trim();
+                }
+                pendingName = name;
+                // 같은 줄에 URL이 이미 있으면 그 자리에서 처리
+                Matcher m = URL_PATTERN.matcher(line);
+                if (m.find()) {
+                    addSource(jsonArray, pendingName, m.group());
+                    pendingName = null;
+                }
+                continue;
             }
 
-            String text = parts[1].trim();
-            JSONArray jsonArray = new JSONArray();
+            // 2-2) bullet 다음 줄에서 URL 찾기
+            if (pendingName != null) {
+                Matcher m = URL_PATTERN.matcher(line);
+                if (m.find()) {
+                    addSource(jsonArray, pendingName, m.group());
+                    pendingName = null;
+                    continue;
+                }
 
-            //줄바꿈 기준으로 나누기
-            String[] lines = text.split("\n");
-            for (String line : lines) {
-                line = line.trim();
-                if (line.startsWith("-")) {
-                    String[] splits = line.split(":", 2);
-                    if (splits.length < 2) continue;
-
-                    String name = splits[0].trim();
-                    String url = splits[1].trim();
-
-                    JSONObject obj = new JSONObject();
-                    obj.put("name", name);
-                    obj.put("url", url);
-                    jsonArray.add(obj);
+                // 마크다운 링크 형태: [텍스트](URL)
+                int l = line.indexOf('(');
+                int r = line.indexOf(')', l + 1);
+                if (l >= 0 && r > l) {
+                    String maybeUrl = line.substring(l + 1, r);
+                    if (maybeUrl.startsWith("http")) {
+                        addSource(jsonArray, pendingName, maybeUrl);
+                        pendingName = null;
+                    }
                 }
             }
-
-            return text;
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new BusinessException(ANSWER_RENDER_ERROR);
         }
+
+        return jsonArray.toJSONString();
+    }
+
+    private static void addSource(JSONArray array, String name, String url) {
+        JSONObject obj = new JSONObject();
+        obj.put("name", name == null ? "" : name.trim());
+        obj.put("url", url == null ? "" : url.trim());
+        array.add(obj);
     }
 }
