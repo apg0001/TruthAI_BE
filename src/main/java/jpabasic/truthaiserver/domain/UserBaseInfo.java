@@ -20,9 +20,16 @@ public class UserBaseInfo {
 
     private String profilePictureUrl;
 
+    @Column
+    private String persona;
+
     public UserBaseInfo(String email, String nickname, String profilePictureUrl) {
         this.email = email;
         this.nickname = nickname;
         this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public void updatePersona(String persona) {
+        this.persona = persona;
     }
 }
