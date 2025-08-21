@@ -14,7 +14,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ClaudeResponse {
+public class ClaudeResponseDto {
 
     private String id;                // ex) "msg_..."
     private String type;              // "message"

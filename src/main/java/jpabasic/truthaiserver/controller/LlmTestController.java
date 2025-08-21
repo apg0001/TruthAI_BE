@@ -4,12 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
-import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
-import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.dto.answer.perplexity.PerplexityRequestDto;
+import jpabasic.truthaiserver.dto.answer.perplexity.PerplexityResponseDto;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.service.prompt.PromptEngine;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +23,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Tag(name="llm 답변 테스트 api",description = "연동 용이 아닌, 백엔드 테스트 용입니다.")
 public class LlmTestController {
 
+    private final WebClient perplexityClient;
     @Value("${openai.model}")
     private String model;
 
@@ -47,12 +46,14 @@ public class LlmTestController {
     private final WebClient geminiClient;
     private final PromptEngine promptEngine;
 
-    public LlmTestController(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient,PromptEngine promptEngine) {
+
+    public LlmTestController(WebClient.Builder webClientBuilder, WebClient openAiWebClient, WebClient claudeClient, WebClient geminiClient, PromptEngine promptEngine, WebClient perplexityClient) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
         this.claudeClient=claudeClient;
         this.geminiClient=geminiClient;
         this.promptEngine=promptEngine;
+        this.perplexityClient = perplexityClient;
     }
 
 
@@ -98,5 +99,21 @@ public class LlmTestController {
                 .getContent()
                 .getParts().get(0)
                 .getText();
+    }
+
+    @GetMapping("/perplexity-test")
+    public String perplexityTest(@RequestParam(name="prompt")String prompt) {
+
+        PerplexityRequestDto request=new PerplexityRequestDto(prompt);
+        System.out.println("✅ perplexity request:"+request);
+
+        PerplexityResponseDto response=perplexityClient.post()
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(PerplexityResponseDto.class)
+                .block();
+
+
+        return response.getChoices().get(0).getMessage().getContent();
     }
 }

@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
+import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponseDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
+import jpabasic.truthaiserver.dto.answer.perplexity.PerplexityRequestDto;
+import jpabasic.truthaiserver.dto.answer.perplexity.PerplexityResponseDto;
 import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.dto.prompt.adapter.ClaudeAdapter;
 import jpabasic.truthaiserver.dto.prompt.adapter.openAIAdapter;
@@ -58,53 +60,49 @@ public class LlmService {
     public LlmService(WebClient.Builder webClientBuilder, WebClient openAiWebClient, WebClient claudeClient, WebClient geminiClient, WebClient perplexityClient, ClaudeAdapter claudeAdapter, openAIAdapter openAIAdapter) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
-        this.claudeClient=claudeClient;
-        this.geminiClient=geminiClient;
-        this.perplexityClient=perplexityClient;
-        this.claudeAdapter=claudeAdapter;
+        this.claudeClient = claudeClient;
+        this.geminiClient = geminiClient;
+        this.perplexityClient = perplexityClient;
+        this.claudeAdapter = claudeAdapter;
         this.openAIAdapter = openAIAdapter;
     }
 
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,true);
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
 
-    private static String stripCodeFences(String s) {
-        if (s == null) return null;
-        String t = s.trim();
-        if (t.startsWith("```")) {
-            int i = t.indexOf('\n');
-            if (i >= 0) t = t.substring(i + 1);
-            if (t.endsWith("```")) t = t.substring(0, t.length() - 3);
-        }
-        return t.trim();
-    }
 
     public String createGptAnswer(String question) {
-        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",question);
+        ChatGptRequest request = new ChatGptRequest("gpt-3.5-turbo", question);
         return gptClient(request);
     }
 
     public String createClaudeAnswer(String question) {
-        ClaudeRequestDto request=new ClaudeRequestDto(question);
+        ClaudeRequestDto request = new ClaudeRequestDto(question);
         return claudeClient(request);
     }
 
     public String createGeminiAnswer(String question) {
         GeminiRequestDto request = GeminiRequestDto.send(question);
-        System.out.println("🏃GeminiRequestDto:"+request);
+        System.out.println("🏃GeminiRequestDto:" + request);
         return geminiClient(request);
     }
 
-    public String createGptAnswerWithPrompt(List<Message> messageList){
-        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList);
+    public String createPerplexityAnswer(String question){
+        PerplexityRequestDto request=new PerplexityRequestDto(question);
+        return perplexityClient(request);
+    }
+
+
+    public String createGptAnswerWithPrompt(List<Message> messageList) {
+        ChatGptRequest request = new ChatGptRequest("gpt-3.5-turbo", messageList);
         return gptClient(request);
     }
 
     public LLMResponseDto structuredWithGpt(List<Message> messageList) throws JsonProcessingException {
-        Map<String,Object> functionSchema= jpabasic.truthaiserver.dto.prompt.adapter.openAIAdapter.functionSchema();
-        System.out.println("🤨functionSchema:"+functionSchema.entrySet());
-        ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList,List.of(functionSchema),Map.of("name","get_structured_answer"));
-        System.out.println("🤨request:"+objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));
+        Map<String, Object> functionSchema = jpabasic.truthaiserver.dto.prompt.adapter.openAIAdapter.functionSchema();
+        System.out.println("🤨functionSchema:" + functionSchema.entrySet());
+        ChatGptRequest request = new ChatGptRequest("gpt-3.5-turbo", messageList, List.of(functionSchema), Map.of("name", "get_structured_answer"));
+        System.out.println("🤨request:" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));
         return gptClientStructured(request);
     }
 
@@ -178,33 +176,14 @@ public class LlmService {
     }
 
 
-
-
-
-    public String createClaudeAnswerWithPrompt(ClaudeRequestDto request){
-//        ClaudeRequestDto request=new ClaudeRequestDto(messageList);
-        return claudeClient(request);
-    }
-
-    public String createGeminiAnswerWithPrompt(GeminiRequestDto request){
+    public String createGeminiAnswerWithPrompt(GeminiRequestDto request) {
         return geminiClient(request);
     }
 
-    //LLM 응답을 dto로 반환
-//    public PromptAnswerDto seperateAnswers(Long promptId,String response){
-//        return new PromptAnswerDto(promptId,response);
-//    }
 
-//    public List<Map<LLMModel,PromptAnswerDto>> seperateAnswers(Long promptId, List<Map<LLMModel,LLMResponseDto>> answers){
-//        return answers.stream()
-//                .flatMap(m->m.entrySet().stream())
-//                .map(e->Map.of(e.getKey(),new PromptAnswerDto(promptId,e.getValue())))
-//                .toList();
-//    }
-
-    public String gptClient(ChatGptRequest request){
+    public String gptClient(ChatGptRequest request) {
         //webClient로 OpenAI로 호출
-        ChatGptResponse chatGptResponse=openAiWebClient.post()
+        ChatGptResponse chatGptResponse = openAiWebClient.post()
                 .uri(gptUrl)
                 .bodyValue(request)
                 .retrieve()
@@ -215,7 +194,7 @@ public class LlmService {
 
     public LLMResponseDto gptClientStructured(ChatGptRequest request) throws JsonProcessingException {
         //webClient로 OpenAI로 호출
-        ChatGptResponse chatGptResponse=openAiWebClient.post()
+        ChatGptResponse chatGptResponse = openAiWebClient.post()
                 .uri(gptUrl)
                 .bodyValue(request)
                 .retrieve()
@@ -228,25 +207,25 @@ public class LlmService {
                 .getFunction_call()
                 .getArguments(); // 💡 이 부분이 JSON 문자열!
 
-        System.out.println("⭐ argumentsJson:"+argumentsJson);
+        System.out.println("⭐ argumentsJson:" + argumentsJson);
 
-        return objectMapper.readValue(argumentsJson,LLMResponseDto.class);
+        return objectMapper.readValue(argumentsJson, LLMResponseDto.class);
     }
-
-
 
 
     public LLMResponseDto claudeClientStructured(ClaudeRequestDto request) {
         // 0) 요청 JSON 로그로 먼저 확인 (messages[].content가 blocks 배열인지 꼭 체크)
         if (log.isDebugEnabled()) {
-            try { log.debug("Claude request: {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request)); }
-            catch (Exception ignore) {}
+            try {
+                log.debug("Claude request: {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));
+            } catch (Exception ignore) {
+            }
         }
 
-        System.out.println("🍪 request : "+ request);
+        System.out.println("🍪 request : " + request);
 
         // 1) 호출 (에러 바디를 그대로 받아서 예외에 붙임)
-        ClaudeResponse resp = claudeClient.post()
+        ClaudeResponseDto resp = claudeClient.post()
                 .uri("/v1/messages")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
@@ -263,7 +242,7 @@ public class LlmService {
                                     return Mono.error(new BusinessException(CLAUDE_HTTP_ERROR));
                                 });
                     }
-                    return res.bodyToMono(ClaudeResponse.class);
+                    return res.bodyToMono(ClaudeResponseDto.class);
                 })
                 .retryWhen(
                         Retry.backoff(3, Duration.ofSeconds(1))
@@ -274,17 +253,17 @@ public class LlmService {
                 .block();
 
 
-        System.out.println("🍪 ClaudeResponse:"+resp);
+        System.out.println("🍪 ClaudeResponse:" + resp);
         if (resp == null) throw new BusinessException(CLAUDE_ANSWER_EMPTY1);
 
-        List<ClaudeResponse.Content> blocks = resp.getContent();
+        List<ClaudeResponseDto.Content> blocks = resp.getContent();
         if (blocks == null || blocks.isEmpty()) {
             // 응답 자체는 왔지만 content가 빈 경우: 요청 스키마/모델명/헤더 문제일 확률 높음
             throw new BusinessException(CLAUDE_ANSWER_EMPTY2);
         }
 
         // 2) tool_use(get_structured_answer) 우선 처리
-        for (ClaudeResponse.Content c : blocks) {
+        for (ClaudeResponseDto.Content c : blocks) {
             if ("tool_use".equalsIgnoreCase(c.getType()) && c.getToolUse() != null) {
                 var tu = c.getToolUse();
                 if ("get_structured_answer".equals(tu.getName())) {
@@ -296,7 +275,7 @@ public class LlmService {
         // 3) fallback: text 블록을 합쳐 JSON 시도 → 실패 시 평문
         String raw = blocks.stream()
                 .filter(b -> "text".equalsIgnoreCase(b.getType()))
-                .map(ClaudeResponse.Content::getText)
+                .map(ClaudeResponseDto.Content::getText)
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining())
                 .trim();
@@ -304,15 +283,13 @@ public class LlmService {
         if (raw.isEmpty()) throw new BusinessException(CLAUDE_ANSWER_EMPTY3);
 
         try {
-            Map<String,Object> m = objectMapper.readValue(raw, new TypeReference<>() {});
+            Map<String, Object> m = objectMapper.readValue(raw, new TypeReference<>() {
+            });
             return mapStructuredAnswer(m);
         } catch (Exception ignore) {
             return new LLMResponseDto(raw, List.of());
         }
     }
-
-
-
 
 
     @SuppressWarnings("unchecked")
@@ -350,26 +327,24 @@ public class LlmService {
     }
 
 
-    public String claudeClient(ClaudeRequestDto request){
+    public String claudeClient(ClaudeRequestDto request) {
 
 //        ClaudeRequestDto request=new ClaudeRequestdto("claude-3-5-sonnet-20241022",question);
 
 
         //WebClient로 ClaudeAI로 호출
-        ClaudeResponse claudeResponse=claudeClient.post()
+        ClaudeResponseDto claudeResponseDto = claudeClient.post()
                 .uri("/v1/messages")
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(ClaudeResponse.class)
+                .bodyToMono(ClaudeResponseDto.class)
                 .block();
-        return claudeResponse.getContent().get(0).getText();
+        return claudeResponseDto.getContent().get(0).getText();
 
     }
 
 
-
-
-    public String geminiClient(GeminiRequestDto request){
+    public String geminiClient(GeminiRequestDto request) {
 
         GeminiResponseDto response = WebClient.builder()
                 .baseUrl("https://generativelanguage.googleapis.com/v1beta")
@@ -391,15 +366,16 @@ public class LlmService {
 
     }
 
+    public String perplexityClient(PerplexityRequestDto request) {
 
-//    public String createPerplexityAnswer(String question){
-//
-//        PerplexityResponseDto response=perplexityClient.post()
-//                .uri("")
-//                .bodyValue(request)
-//                .retrieve()
-//                .bodyToMono(PerplexityResponseDto.class)
-//                .block();
-//        return response.getChoices(0).getMessage().getContent();
-//    }
+        PerplexityResponseDto response=perplexityClient.post()
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(PerplexityResponseDto.class)
+                .block();
+        return response.getChoices().get(0).getMessage().getContent();
+    }
 }
+
+
+
