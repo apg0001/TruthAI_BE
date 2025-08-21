@@ -5,6 +5,8 @@ import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class OptimizedTemplate extends BasePromptTemplate {
 
@@ -21,6 +23,11 @@ public class OptimizedTemplate extends BasePromptTemplate {
 //            """;
 //    }
 
+
+    @Override
+    protected String fewShotExamples(PromptDomain domain, String persona, Map<String, Object> vars) {
+        return "";
+    }
 
     @Override
     protected String userContent(Message message) {

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class GeminiAdapter extends BasePromptTemplate{
@@ -60,6 +61,7 @@ public class GeminiAdapter extends BasePromptTemplate{
 
         return new GeminiRequestDto(sys,contents,gen);
     }
+
 
 
 }

@@ -9,9 +9,6 @@ import java.util.Map;
 
 public abstract class BasePromptTemplate {
 
-    public static Map<String, Object> functionSchema() {
-        return functionSchema;
-    }
 
     public List<Message> render(Message message, String persona, PromptDomain domain) {
         List<Message> msgs = new ArrayList<>();
@@ -20,37 +17,6 @@ public abstract class BasePromptTemplate {
         return executeInternalRender(message, msgs);
     }
 
-    public List<Message> render(Message message) {
-        List<Message> msgs = new ArrayList<>();
-        return executeInternalRender(message, msgs);
-    }
-
-    public static Map<String, Object> functionSchema = Map.of(
-            "name", "get_structured_answer",
-            "description", "Answer a user question in structured format",
-            "parameters", Map.of(
-                    "type", "object",
-                    "properties", Map.of(
-                            "answer", Map.of(
-                                    "type", "string",
-                                    "description", "The answer to the user question"
-                            ),
-                            "sources", Map.of(
-                                    "type", "array",
-                                    "description", "Credible sources with URLs",
-                                    "items", Map.of(
-                                            "type", "object",
-                                            "properties", Map.of(
-                                                    "title", Map.of("type", "string", "description", "Source title"),
-                                                    "url", Map.of("type", "string", "description", "Source URL")
-                                            ),
-                                            "required", List.of("title", "url")
-                                    )
-                            )
-                    ),
-                    "required", List.of("answer", "sources")
-            )
-    );
 
     private List<Message> executeInternalRender(Message message, List<Message> msgs) {
         Map<String, Object> vars = new HashMap<>();
@@ -75,7 +41,7 @@ public abstract class BasePromptTemplate {
 
     protected String globalGuidelines() {
         return """
-                final answer should be submbitted onlly by "get_structured_answer" tool.
+                final answer should be submbitted only by "get_structured_answer" tool.
                 No free text.
                 """;
     }
@@ -104,6 +70,10 @@ public abstract class BasePromptTemplate {
                   ]
                 }
                 """;
+    }
+
+    protected String fewShotExamples(PromptDomain domain, String persona, Map<String, Object> vars){
+        return "";
     }
 
     protected String userContent(Message message) {

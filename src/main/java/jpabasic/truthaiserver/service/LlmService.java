@@ -14,10 +14,7 @@ import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
-import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
-import jpabasic.truthaiserver.dto.prompt.ClaudeAdapter;
-import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
-import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
+import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +42,7 @@ import static jpabasic.truthaiserver.exception.ErrorMessages.*;
 @Slf4j
 public class LlmService {
 
+    private final jpabasic.truthaiserver.dto.prompt.openAIAdapter openAIAdapter;
     @Value("${openai.api.url}")
     private String gptUrl;
 
@@ -62,14 +60,14 @@ public class LlmService {
     private final ClaudeAdapter claudeAdapter;
 
 
-    public LlmService(WebClient.Builder webClientBuilder,WebClient openAiWebClient,WebClient claudeClient,WebClient geminiClient,WebClient perplexityClient,ClaudeAdapter claudeAdapter) {
+    public LlmService(WebClient.Builder webClientBuilder, WebClient openAiWebClient, WebClient claudeClient, WebClient geminiClient, WebClient perplexityClient, ClaudeAdapter claudeAdapter, openAIAdapter openAIAdapter) {
         this.webClientBuilder = webClientBuilder;
         this.openAiWebClient = openAiWebClient;
         this.claudeClient=claudeClient;
         this.geminiClient=geminiClient;
         this.perplexityClient=perplexityClient;
         this.claudeAdapter=claudeAdapter;
-
+        this.openAIAdapter = openAIAdapter;
     }
 
     private final ObjectMapper objectMapper = new ObjectMapper()
@@ -108,7 +106,7 @@ public class LlmService {
     }
 
     public LLMResponseDto structuredWithGpt(List<Message> messageList) throws JsonProcessingException {
-        Map<String,Object> functionSchema= BasePromptTemplate.functionSchema();
+        Map<String,Object> functionSchema= jpabasic.truthaiserver.dto.prompt.openAIAdapter.functionSchema();
         System.out.println("🤨functionSchema:"+functionSchema.entrySet());
         ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList,List.of(functionSchema),Map.of("name","get_structured_answer"));
         System.out.println("🤨request:"+objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));

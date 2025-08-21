@@ -3,6 +3,7 @@ package jpabasic.truthaiserver.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jpabasic.truthaiserver.domain.LLMModel;
+import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
@@ -47,6 +48,24 @@ public class PromptController {
 
         Map<String,Object> map=new HashMap<>();
         map.put("optimizedPrompt",optimizedPrompt);
+        map.put("promptId",promptId);
+        return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
+    }
+
+    @PostMapping("/create-best-prompt")
+    @Operation(summary="최적화 프롬프트 생성 (수정 가능하도록) ",description = "templateKey 값은 optimzied로 주세요.")
+    public ResponseEntity<Map<String,Object>> optimizingPrompt(@RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal User user){
+        Long promptId=promptService.saveOriginalPrompt(dto,user);
+        List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
+
+        //저장 되는 제목 설정 (질문 내용 요약)
+        String summary = promptService.optimizingPrompt(dto.getQuestion(),dto.getPersona(), dto.getPromptDomain());
+
+        String result = llmService.createGptAnswerWithPrompt(optimizedPrompt); //LLM 답변 받기
+        //optimized_prompt 저장
+
+        Map<String,Object> map=new HashMap<>();
+        map.put("optimizedPrompt",result);
         map.put("promptId",promptId);
         return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
     }

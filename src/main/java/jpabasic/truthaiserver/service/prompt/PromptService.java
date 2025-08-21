@@ -102,6 +102,11 @@ public class PromptService {
         return promptEngine.execute("summarize",prompt);
     }
 
+    //최적화 프롬프트 생성
+    public String optimizingPrompt(String prompt,String persona,PromptDomain domain){
+        return promptEngine.execute("editable",prompt,persona,domain);
+    }
+
     public List<Map<LLMModel,LLMResponseDto>> runByModel(LlmRequestDto request){
         Map<LLMModel,?> answer=request.getModels().stream()
                 .map(LLMModel::fromString)
@@ -153,6 +158,24 @@ public class PromptService {
 
         return optimizedPrompt;
     }
+
+    //수정할 수 있는 최적화된 프롬프트 반환
+    //최적화된 프롬프트 반환
+    public List<Message> getNewOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
+//        Long promptId=saveOriginalPrompt(dto,user);
+        String templateKey=dto.getTemplateKey();
+
+        List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);
+
+        //db에 저장은 String type으로 ? -> List<Message>로 수정할수도.
+        String optimizedPromptSt=optimizedPrompt.toString();
+        saveOptimizedPrompt(optimizedPromptSt,promptId);
+
+        return optimizedPrompt;
+    }
+
+
+
 
     //LLM 응답 저장
     @Transactional
