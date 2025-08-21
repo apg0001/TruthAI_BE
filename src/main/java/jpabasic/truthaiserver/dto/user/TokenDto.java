@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto;
+package jpabasic.truthaiserver.dto.user;
 
 import lombok.Getter;
 import lombok.Setter;

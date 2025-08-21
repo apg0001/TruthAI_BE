@@ -1,7 +1,7 @@
 package jpabasic.truthaiserver.service.prompt;
 
 import jpabasic.truthaiserver.domain.PromptDomain;
-import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
+import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
 import jpabasic.truthaiserver.dto.answer.Message;
 import org.springframework.stereotype.Component;
 

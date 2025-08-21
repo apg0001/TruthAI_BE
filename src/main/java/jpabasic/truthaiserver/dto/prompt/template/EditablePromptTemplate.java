@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto.prompt;
+package jpabasic.truthaiserver.dto.prompt.template;
 
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.Message;

@@ -1,7 +1,7 @@
 package jpabasic.truthaiserver.service;
 
 import jpabasic.truthaiserver.domain.User;
-import jpabasic.truthaiserver.dto.GoogleInfoDto;
+import jpabasic.truthaiserver.dto.user.GoogleInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

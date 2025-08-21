@@ -3,7 +3,6 @@ package jpabasic.truthaiserver.service;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
-import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.repository.AnswerRepository;
@@ -61,18 +60,6 @@ public class AnswerService {
 //        answerRepository.save(answerEntity);
         return answerDto;
 
-    }
-
-
-    public Answer getAnswer(PromptAnswerDto dto) {
-        Long promptId = dto.promptId();
-        Answer answer = null;
-        try {
-            answer = answerRepository.findByPromptIdAndModel(promptId, GPT);
-        } catch (Exception e) {
-            new BusinessException(ErrorMessages.MESSAGE_NULL_ERROR);
-        }
-        return answer;
     }
 
 

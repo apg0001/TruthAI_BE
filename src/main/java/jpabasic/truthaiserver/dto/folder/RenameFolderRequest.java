@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto;
+package jpabasic.truthaiserver.dto.folder;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

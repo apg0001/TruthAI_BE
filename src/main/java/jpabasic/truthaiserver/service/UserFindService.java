@@ -1,10 +1,9 @@
 package jpabasic.truthaiserver.service;
 
-import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
 import jpabasic.truthaiserver.domain.User;
-import jpabasic.truthaiserver.dto.PersonaRequest;
-import jpabasic.truthaiserver.dto.PersonaResponse;
+import jpabasic.truthaiserver.dto.persona.PersonaRequest;
+import jpabasic.truthaiserver.dto.persona.PersonaResponse;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

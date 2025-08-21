@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto.prompt;
+package jpabasic.truthaiserver.dto.prompt.template;
 
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.Message;
@@ -79,12 +79,6 @@ public abstract class BasePromptTemplate {
     protected String userContent(Message message) {
         String text = message.getContent();
         return """
-                Task:
-                - Answer the question strictly as the JSON shape above.
-                - Provide at least 2 credible sources with valid URLs.
-                - No markdown, no explanation.
-                - Only JSON.
-
                 Question: ```%s```
                 """.formatted(text);
     }

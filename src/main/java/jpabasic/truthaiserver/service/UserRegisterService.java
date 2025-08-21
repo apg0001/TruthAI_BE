@@ -2,7 +2,7 @@ package jpabasic.truthaiserver.service;
 
 import jakarta.transaction.Transactional;
 import jpabasic.truthaiserver.domain.User;
-import jpabasic.truthaiserver.dto.UserRegistrationDto;
+import jpabasic.truthaiserver.dto.user.UserRegistrationDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.repository.UserRepository;

@@ -1,9 +1,7 @@
-package jpabasic.truthaiserver.dto;
+package jpabasic.truthaiserver.dto.crosscheck;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor

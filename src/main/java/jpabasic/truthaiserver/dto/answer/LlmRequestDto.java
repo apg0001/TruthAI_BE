@@ -25,6 +25,7 @@ public class LlmRequestDto {
     private List<String> models;
 
     @NotBlank(message="프롬프트를 작성해주세요.")
+    @Schema(description = "유저가 직접 수정한 최적화된 프롬프트를 복붙하여 해당 필드에 넣어주세요.")
     private String question;
 
     @Schema(description="페르소나:최적화 생성 시에만 입력 필수",required=false)
@@ -34,6 +35,9 @@ public class LlmRequestDto {
     private PromptDomain promptDomain;
 
     private String templateKey;
+
+
+
 
 
 

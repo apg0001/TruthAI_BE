@@ -9,7 +9,6 @@ import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
-import jpabasic.truthaiserver.dto.prompt.PromptAnswerDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
 import jpabasic.truthaiserver.dto.sources.SourcesDto;
 import jpabasic.truthaiserver.exception.BusinessException;

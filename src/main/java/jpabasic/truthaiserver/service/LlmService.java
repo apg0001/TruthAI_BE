@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.answer.claude.AnthMessageReq;
-import jpabasic.truthaiserver.dto.answer.claude.AnthMessageResp;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 import jpabasic.truthaiserver.dto.answer.claude.ClaudeResponse;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
@@ -15,20 +12,18 @@ import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptRequest;
 import jpabasic.truthaiserver.dto.answer.openai.ChatGptResponse;
 import jpabasic.truthaiserver.dto.prompt.*;
+import jpabasic.truthaiserver.dto.prompt.adapter.ClaudeAdapter;
+import jpabasic.truthaiserver.dto.prompt.adapter.openAIAdapter;
 import jpabasic.truthaiserver.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.w3c.dom.Text;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +37,7 @@ import static jpabasic.truthaiserver.exception.ErrorMessages.*;
 @Slf4j
 public class LlmService {
 
-    private final jpabasic.truthaiserver.dto.prompt.openAIAdapter openAIAdapter;
+    private final jpabasic.truthaiserver.dto.prompt.adapter.openAIAdapter openAIAdapter;
     @Value("${openai.api.url}")
     private String gptUrl;
 
@@ -106,7 +101,7 @@ public class LlmService {
     }
 
     public LLMResponseDto structuredWithGpt(List<Message> messageList) throws JsonProcessingException {
-        Map<String,Object> functionSchema= jpabasic.truthaiserver.dto.prompt.openAIAdapter.functionSchema();
+        Map<String,Object> functionSchema= jpabasic.truthaiserver.dto.prompt.adapter.openAIAdapter.functionSchema();
         System.out.println("🤨functionSchema:"+functionSchema.entrySet());
         ChatGptRequest request=new ChatGptRequest("gpt-3.5-turbo",messageList,List.of(functionSchema),Map.of("name","get_structured_answer"));
         System.out.println("🤨request:"+objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request));

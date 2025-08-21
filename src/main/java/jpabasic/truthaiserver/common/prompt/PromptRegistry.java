@@ -1,6 +1,6 @@
 package jpabasic.truthaiserver.common.prompt;
 
-import jpabasic.truthaiserver.dto.prompt.BasePromptTemplate;
+import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import org.springframework.stereotype.Component;
