@@ -38,6 +38,11 @@ public class PromptEngine {
         return getOptimizedAnswerByGpt(templateKey,new Message(question),null,null);
     }
 
+    //최적화 프롬프트 생성 (new🏃🏃)
+    public String execute(String templateKey,String question,String persona,PromptDomain domain){
+        return getOptimizedAnswerByGpt(templateKey,new Message(question),persona,domain);
+    }
+
 
     //최적화 프롬프트 반환(String type)
     public String optimizingPrompt(LlmRequestDto request){
@@ -52,6 +57,7 @@ public class PromptEngine {
     //최적화 프롬프트 반환(List<Message>) -> 실행 까쥐~
     public List<Message> executeInternal(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain){
         BasePromptTemplate template=registry.getByKey(templateKey);
+        System.out.println("🍪template:"+template);
         if(template==null){
             throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
         }
