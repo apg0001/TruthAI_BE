@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto;
+package jpabasic.truthaiserver.dto.answer;
 
 import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.exception.BusinessException;

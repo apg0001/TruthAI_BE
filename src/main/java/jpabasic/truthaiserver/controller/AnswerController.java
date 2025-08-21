@@ -2,17 +2,11 @@ package jpabasic.truthaiserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import jpabasic.truthaiserver.domain.LLMModel;
 import jpabasic.truthaiserver.domain.User;
-import jpabasic.truthaiserver.dto.LlmNoPromptRequestDto;
+import jpabasic.truthaiserver.dto.answer.LlmNoPromptRequestDto;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
-import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
-import jpabasic.truthaiserver.exception.BusinessException;
-import jpabasic.truthaiserver.exception.ErrorMessages;
-import jpabasic.truthaiserver.repository.UserRepository;
 import jpabasic.truthaiserver.service.AnswerService;
-import jpabasic.truthaiserver.service.JwtService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -2,10 +2,9 @@ package jpabasic.truthaiserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jpabasic.truthaiserver.dto.CrossCheckListDto;
-import jpabasic.truthaiserver.dto.CrossCheckResponseDto;
+import jpabasic.truthaiserver.dto.crosscheck.CrossCheckListDto;
+import jpabasic.truthaiserver.dto.crosscheck.CrossCheckResponseDto;
 import jpabasic.truthaiserver.service.CrossCheckService;
-import jpabasic.truthaiserver.service.EmbeddingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

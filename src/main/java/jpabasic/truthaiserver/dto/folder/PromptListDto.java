@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto;
+package jpabasic.truthaiserver.dto.folder;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

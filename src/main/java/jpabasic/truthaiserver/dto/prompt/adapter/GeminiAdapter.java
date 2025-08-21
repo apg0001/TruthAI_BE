@@ -1,17 +1,17 @@
-package jpabasic.truthaiserver.dto.prompt;
+package jpabasic.truthaiserver.dto.prompt.adapter;
 
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
+import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
-public class GeminiAdapter extends BasePromptTemplate{
+public class GeminiAdapter extends BasePromptTemplate {
 
     //Gemini 용으로 재구성
     public GeminiRequestDto toGeminiRequest(

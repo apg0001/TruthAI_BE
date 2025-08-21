@@ -1,4 +1,4 @@
-package jpabasic.truthaiserver.dto;
+package jpabasic.truthaiserver.dto.user;
 
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.domain.UserBaseInfo;

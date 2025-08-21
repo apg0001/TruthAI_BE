@@ -1,20 +1,14 @@
-package jpabasic.truthaiserver.dto.prompt;
+package jpabasic.truthaiserver.dto.prompt.adapter;
 
-import com.anthropic.core.JsonValue;
-import com.anthropic.models.messages.*;
-import jpabasic.truthaiserver.domain.PromptDomain;
-import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
+import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
 import org.springframework.stereotype.Component;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component
-public class ClaudeAdapter extends BasePromptTemplate{
+public class ClaudeAdapter extends BasePromptTemplate {
 
 //    //Claude 용으로 재구성
 //    public ClaudeRequestDto toClaudeRequest(

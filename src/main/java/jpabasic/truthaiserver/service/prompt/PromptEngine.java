@@ -1,15 +1,16 @@
 package jpabasic.truthaiserver.service.prompt;
 
-import com.anthropic.models.messages.MessageCreateParams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jpabasic.truthaiserver.common.prompt.PromptRegistry;
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.answer.claude.ClaudeRequestDto;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
 import jpabasic.truthaiserver.dto.prompt.*;
+import jpabasic.truthaiserver.dto.prompt.adapter.ClaudeAdapter;
+import jpabasic.truthaiserver.dto.prompt.adapter.GeminiAdapter;
+import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.service.LlmService;

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jpabasic.truthaiserver.domain.User;
-import jpabasic.truthaiserver.dto.*;
+import jpabasic.truthaiserver.dto.folder.*;
 import jpabasic.truthaiserver.service.FolderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
