@@ -30,4 +30,6 @@ public class UserRegisterService {
     throw new BusinessException(ErrorMessages.REGISTRATION_FAILED);
         }
     }
+
+
 }

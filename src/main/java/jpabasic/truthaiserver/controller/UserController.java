@@ -2,20 +2,27 @@ package jpabasic.truthaiserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
+import jpabasic.truthaiserver.domain.User;
+import jpabasic.truthaiserver.domain.UserBaseInfo;
 import jpabasic.truthaiserver.dto.GoogleInfoDto;
+import jpabasic.truthaiserver.dto.PersonaRequest;
+import jpabasic.truthaiserver.dto.PersonaResponse;
 import jpabasic.truthaiserver.dto.TokenDto;
+import jpabasic.truthaiserver.exception.BusinessException;
+import jpabasic.truthaiserver.repository.UserRepository;
 import jpabasic.truthaiserver.service.LoginService;
+import jpabasic.truthaiserver.service.UserFindService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 import jpabasic.truthaiserver.service.AuthService;
 
 
 import java.util.Map;
+
+import static jpabasic.truthaiserver.exception.ErrorMessages.USER_NULL_ERROR;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,6 +32,8 @@ public class UserController {
 
     private final AuthService authService;
     private final LoginService loginService;
+    private final UserRepository userRepository;
+    private final UserFindService userFindService;
 
     @PostMapping("/login")
     @Operation(summary = "구글 로그인", description = "구글 로그인 인가 코드를 받아 사용자 인증을 합니다.")
@@ -50,5 +59,30 @@ public class UserController {
     public ResponseEntity<Void> logout(HttpSession session) {
         session.invalidate();
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/persona")
+    @Operation(summary = "유저 페르소나 기본 설정")
+    public ResponseEntity<PersonaResponse> setPersona(
+            @RequestBody PersonaRequest req,
+            @AuthenticationPrincipal String email){
+
+        PersonaResponse res=userFindService.setPersona(req, email);
+
+        return ResponseEntity.ok(res);
+    }
+
+
+    @GetMapping("/persona")
+    @Operation(summary = "유저 기본 설정한 페르소나 조회")
+    public ResponseEntity<PersonaResponse> getPersona(
+            @AuthenticationPrincipal String email){
+
+        User user=userFindService.findUserByEmail(email)
+                .orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+
+        String persona=user.getUserBaseInfo().getPersona();
+        PersonaResponse res=new PersonaResponse(persona);
+        return ResponseEntity.ok(res);
     }
 }
