@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface PromptRepository extends JpaRepository<Prompt, Long> {
     Optional<Prompt> findByIdAndUserId(Long id, Long userId);
-    List<Prompt> findByFolderIdOrderByCreatedAtDesc(Long folderId);
+    List<Prompt> findTop5ByOrderByCreatedAtDesc();
 }

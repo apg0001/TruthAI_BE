@@ -10,6 +10,7 @@ import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.dto.sources.SourcesDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.AnswerRepository;
@@ -219,6 +220,17 @@ public class PromptService {
 
         PromptResultDto result=new PromptResultDto(answerDto,sources);
         return result;
+
+    }
+
+    //사이드바 리스트 조회
+    public List<SideBarPromptListDto> checkSideBar(Long userId){
+        Prompt prompt=promptRepository.findById(userId)
+                .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
+
+        promptRepository.findTop5ByOrderByCreatedAtDesc();
+        SideBarPromptListDto dto=new SideBarPromptListDto(prompt.getId(),prompt.getSummary());
+
 
     }
 

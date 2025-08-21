@@ -38,6 +38,13 @@ public class PromptController {
         this.sourcesService = sourcesService;
     }
 
+    @GetMapping("/side-bar")
+    @Operation(summary="사이드바 리스트 조회")
+    public ResponseEntity<Void> checkSideBar(@AuthenticationPrincipal User user) {
+        Long userId=user.getId();
+        promptService.checkSideBar(userId);
+    }
+
 
     @PostMapping("/create-best")
     @Operation(summary="최적화 프롬프트 생성",description = "templateKey 값은 optimzied로 주세요.")
@@ -70,13 +77,7 @@ public class PromptController {
         return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
     }
 
-//    @PostMapping("/edit/my-prompt")
-//    @Operation(summary="반환받은 최적화 프롬프트를 내 맘대로 수정해서 응답 생성 받기")
-//    public ResponseEntity<String> getOptimizedAnswer(@RequestBody LlmRequestDto dto, @AuthenticationPrincipal User user){
-//
-//        String optimizedPrompt=promptService.optimizingPrompt(dto);
-//        return ResponseEntity.ok(optimizedPrompt);
-//    }
+
 
     @PostMapping("/get-best/organized")
     @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "gpt, claude 사용 가능. templateKey='optimized'로 주세요")
@@ -94,6 +95,8 @@ public class PromptController {
         //정돈된 source로 응답
         return ResponseEntity.ok(result);
     }
+
+
 
     @PostMapping("/summarize")
     @Operation(summary="프롬프트 내용 요약하기",description="model 필드 값은 gpt로 주세요!")
