@@ -39,7 +39,7 @@ public class AnswerController {
         //저장 되는 제목 설정 (질문 내용 요약)
         String summary = promptService.summarizePrompts(question);
 
-        List<LlmAnswerDto> result = answerService.getLlmAnswers(modelEnums, question); //LLM 답변 받기
+        List<LlmAnswerDto> result = answerService.selectAnswer(modelEnums, question); //LLM 답변 받기
         promptService.savePromptAnswer(question, result, user, summary); // 질문 & 답변 저장
 
         return ResponseEntity.ok(result);

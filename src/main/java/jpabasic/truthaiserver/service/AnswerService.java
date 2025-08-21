@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static jpabasic.truthaiserver.domain.LLMModel.CLAUDE;
-import static jpabasic.truthaiserver.domain.LLMModel.GPT;
-import static jpabasic.truthaiserver.domain.LLMModel.GEMINI;
+import static jpabasic.truthaiserver.domain.LLMModel.*;
 
 @Service
 @Slf4j
@@ -29,10 +27,6 @@ public class AnswerService {
     }
 
 
-    public List<LlmAnswerDto> getLlmAnswers(List<LLMModel> models,String question) {
-
-        return selectAnswer(models, question);
-    }
 
 
     public List<LlmAnswerDto> selectAnswer(List<LLMModel> models, String question) {
@@ -45,7 +39,7 @@ public class AnswerService {
                 .map(model -> switch (model) {
                     case GPT -> toDto(GPT, llmService.createGptAnswer(question));
                     case CLAUDE -> toDto(CLAUDE, llmService.createClaudeAnswer(question));
-                    //            case PERPLEXITY -> new LlmAnswerDto(PERPLEXITY, createAnswer(PERPLEXITY));
+                    case PERPLEXITY -> toDto(PERPLEXITY, llmService.createPerplexityAnswer(question));
                     case GEMINI -> toDto(GEMINI, llmService.createGeminiAnswer(question));
                     default -> throw new BusinessException(ErrorMessages.LLM_MODEL_ERROR);
                 })

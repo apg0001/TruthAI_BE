@@ -74,7 +74,7 @@ public class AiConfig {
     public WebClient perplexityClient(){
         return webClientBuilder
                 .baseUrl(perplexityApiUrl)
-//                .defaultHeader("Authorization","Bearer "+perplexityApiKey)
+                .defaultHeader("Authorization","Bearer "+perplexityApiKey)
                 .build();
     }
 
