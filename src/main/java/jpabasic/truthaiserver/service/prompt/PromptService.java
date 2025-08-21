@@ -147,7 +147,6 @@ public class PromptService {
 
     //최적화된 프롬프트 반환
     public List<Message> getOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
-//        Long promptId=saveOriginalPrompt(dto,user);
         String templateKey=dto.getTemplateKey();
 
         List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);

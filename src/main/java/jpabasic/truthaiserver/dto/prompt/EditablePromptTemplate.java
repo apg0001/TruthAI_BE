@@ -10,73 +10,102 @@ import java.util.Map;
 public class EditablePromptTemplate extends BasePromptTemplate {
 
     @Override
-    public String key(){
+    public String key() {
         return "editable";
     }
 
     @Override
-    public String systemIdentity(PromptDomain domain, String persona){
-        return String.format("당신은 %s 전문가이고 %s 대상으로 해당 내용을 알려주어야 합니다.",domain,persona);
+    public String systemIdentity(PromptDomain domain, String persona) {
+        return
+                """
+                        당신은 프롬프트 엔지니어입니다.
+                        목표: 사용자의 원질문을 바탕으로, 다른 AI가 정확하고 상세히 답하도록 하는 **최적화된 사용자 프롬프트**만 작성합니다.
+                        절대 질문에 대한 직접적인 답변을 작성하지 않습니다.
+                        
+                        """;
+
     }
 
     @Override
-    protected String globalGuidelines(){
-        return "";
+    protected String globalGuidelines() {
+        return
+
+                """
+                        [행동 규칙]
+                        - 절대 질문에 대한 '답변'을 작성하지 말 것. 오직 '사용자 프롬프트'만 작성.
+                        - 출력은 마크다운 코드블록 하나만. 코드블록 라벨은 prompt.
+                        - 불필요한 서론/결론/자기언급 금지.
+                        
+                         [출력 형식]
+                        ```prompt
+                        (여기에 최종 사용자 프롬프트만)
+                        
+                        """;
     }
 
 
     @Override
-    protected String fewShotExamples(PromptDomain domain, String persona, Map<String,Object> vars) {
+    protected String fewShotExamples(Map<String, Object> vars) {
         String userQuestion = String.valueOf(vars.getOrDefault("userQuestion", "주제에 대해 알려줘"));
-        String personaPrompt=systemIdentity(domain,persona);
-        String topic=domain.toString();
 
         return """
-            다음 예시를 참고해서, 최적화된 프롬프트를 만들어 주세요.
-
-            - 예시 1 :
+            [FEW-SHOT EXAMPLES]
+            
+            <예시 1>
+            유저의 질문 : ai에 대해서 알려줘
+            어시스턴트 :
+            ```prompt
+            [역할] 당신은 인공지능 전문가입니다.
+            [질문] "ai에 대해서 알려줘"
+            [목표] 최신 동향을 '기술·산업·정책' 3가지 관점에서 간결하고 체계적으로 설명하도록 유도한다.
+            [출력 구조]
+          
+            [작성 규칙]
+            - 각 bullet은 1–2문장. 가능하면 간단한 예시/사례 포함.
+            - 사실 기반 우선, 불확실하면 불확실하다고 명시.
+            - 질문과 동일한 언어로 작성.
+            [금지]
+            - 메타 텍스트/서론/결론 출력 금지. 위 구조만 출력.
+            <예시 2 — 장단점 구조>
+            유저의 질문 : 탄수화물이 장단점에 대해서 알려줘
+            어시스턴트 :
+            
+            
+            <실제 사용자 입력>
             유저의 질문 : %s
-            답변 : %s. 아래 조건에 맞춰 답변을 정리해 주세요.
-            1) '핵심 개념', '응용·사례', '리스크·이슈' 세 가지 카테고리로 구분할 것
-            2) 각 카테고리별 최소 3가지 핵심 포인트를 bullet point로 제시할 것
-            3) 각 포인트는 명확하고 간결한 한두 문장으로 설명할 것
-            4) 가능하면 간단한 예시나 실제 사례를 함께 제시할 것
+            """.formatted(userQuestion);
 
-            - 예시 2 :
-            유저의 질문 : %s
-            답변 : %s. 아래 조건에 맞춰 답변을 정리해 주세요.
-            1) '장점'과 '단점' 두 카테고리로 구분할 것
-            2) 각 카테고리별 최소 3가지 핵심 포인트를 bullet point로 제시할 것
-            3) 각 포인트는 명확하고 간결한 한두 문장으로 설명할 것
-            4) 가능하면 간단한 예시(상황/사례)를 함께 제시할 것
-            """.formatted(
-                userQuestion, personaPrompt,
-                userQuestion, personaPrompt
-        );
     }
 
 
     @Override
-    protected String userContent(Message message){
-        String text=message.getContent();
+    protected String userContent(Message message) {
+        String text = message.getContent();
         return """
-               
-                사용자가 ``` %s ```라고 물었습니다. \s
-                답변은 다음 조건을 충족하세요: \s
                 
-                1. **구조화**: "장점"과 "단점" 두 가지 큰 카테고리로 나누어 작성. \s
-                2. **항목 수**: 각 카테고리별 최소 3가지 핵심 포인트를 bullet point 형식으로 제시. \s
-                3. **설명 방식**: \s
-                   - 명확하고 간결한 문장으로 설명. \s
-                   - 가능하다면 간단한 예시를 포함. \s
-                4. **톤**: 전문적이지만 이해하기 쉽게. \s
+                사용자의 원질문: "%s"
                 
-                이 조건에 맞춰 답변을 작성하세요.
+                당신의 임무는 위 질문에 대해 다른 AI에게 전달할 **최적화된 사용자 프롬프트**를 작성하는 것입니다.
+                ※ 정답을 쓰지 말고, **프롬프트 문구만** 작성하세요.
+                
+                [프롬프트에 반드시 포함할 요소]
+                - 목표: 질문에 대해 정확하고 상세한 설명을 이끌어내는 목표 명시
+                - 출력 구조:
+                  - 질문에 '장단점/장점/단점/pros/cons'가 포함되면 → "장점 / 단점" 두 섹션, 각 최소 3개 bullet
+                  - 그 외의 경우 → "핵심 개념 / 응용·사례 / 리스크·이슈" 세 섹션, 각 최소 3개 bullet
+                - 작성 규칙: 각 bullet은 1–2문장, 가능한 경우 간단한 예시·수치·반례 포함
+                - 정확성: 추정은 분리해 표기, 모르면 모른다고 말하고 대안/다음 단계 제시
+                - 언어: 질문과 동일한 언어로 답하도록 지시
+                - 금지: 메타설명/사족/자기언급 금지(프롬프트 외 텍스트 출력 금지)
+                
+                [출력 형식]
+                - 아래 형식의 마크다운 코드블록 **하나만** 출력:
+                ```prompt
+                (여기에 최종 사용자 프롬프트만)
                 
                 
                 """.formatted(text);
     }
-
 
 
 }

@@ -53,13 +53,14 @@ public class PromptController {
     }
 
     @PostMapping("/create-best-prompt")
-    @Operation(summary="최적화 프롬프트 생성 (수정 가능하도록) ",description = "templateKey 값은 optimzied로 주세요.")
+    @Operation(summary="최적화 프롬프트 생성 (수정 가능하도록) ",description = "templateKey 값은 editable 로 주세요.")
     public ResponseEntity<Map<String,Object>> optimizingPrompt(@RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal User user){
         Long promptId=promptService.saveOriginalPrompt(dto,user);
         List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
 
         //저장 되는 제목 설정 (질문 내용 요약)
-        String summary = promptService.optimizingPrompt(dto.getQuestion(),dto.getPersona(), dto.getPromptDomain());
+        String prepareOptimizing = promptService.optimizingPrompt(dto.getQuestion(),dto.getPersona(), dto.getPromptDomain());
+        System.out.println("🖥️ prepareOptimizing:"+prepareOptimizing);
 
         String result = llmService.createGptAnswerWithPrompt(optimizedPrompt); //LLM 답변 받기
         //optimized_prompt 저장
