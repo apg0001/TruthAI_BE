@@ -41,7 +41,7 @@ public class PromptController {
 
     @GetMapping("/side-bar/list")
     @Operation(summary="프롬프트 사이드바 리스트 조회")
-    public ResponseEntity<List<SideBarPromptListDto>> checkSideBar(@AuthenticationPrincipal(expression = "user") User user) {
+    public ResponseEntity<List<SideBarPromptListDto>> checkPromptSideBar(@AuthenticationPrincipal(expression = "user") User user) {
         Long userId=user.getId();
         List<SideBarPromptListDto> result=promptService.checkSideBar(userId);
         return ResponseEntity.ok(result);
