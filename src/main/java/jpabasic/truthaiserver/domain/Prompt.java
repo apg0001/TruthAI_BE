@@ -49,6 +49,16 @@ public class Prompt extends BaseEntity{
         this.user = user;
     }
 
+    public void assignUser(User user) {
+        this.user = user;
+    }
+
+    public void savePrompt(String originalPrompt,String optimizedPrompt,String summary) {
+        this.originalPrompt = originalPrompt;
+        this.optimizedPrompt = optimizedPrompt;
+        this.summary = summary;
+    }
+
     public void optimize(String optimizedPrompt) {
         this.optimizedPrompt = optimizedPrompt;
     }

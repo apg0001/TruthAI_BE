@@ -40,7 +40,7 @@ public class PromptController {
     }
 
     @GetMapping("/side-bar/list")
-    @Operation(summary="사이드바 리스트 조회")
+    @Operation(summary="프롬프트 사이드바 리스트 조회")
     public ResponseEntity<List<SideBarPromptListDto>> checkSideBar(@AuthenticationPrincipal(expression = "user") User user) {
         Long userId=user.getId();
         List<SideBarPromptListDto> result=promptService.checkSideBar(userId);
@@ -58,30 +58,31 @@ public class PromptController {
     }
 
 
-    @PostMapping("/create-best")
-    @Operation(summary="최적화 프롬프트 생성",description = "templateKey 값은 optimzied로 주세요.")
-    public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal User user){
-        Long promptId=promptService.saveOriginalPrompt(dto,user);
-        List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
-
-        Map<String,Object> map=new HashMap<>();
-        map.put("optimizedPrompt",optimizedPrompt);
-        map.put("promptId",promptId);
-        return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
-    }
+//    @PostMapping("/create-best")
+//    @Operation(summary="최적화 프롬프트 생성",description = "templateKey 값은 optimzied로 주세요.")
+//    public ResponseEntity<Map<String,Object>> savePrompt(@RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal User user){
+//        Long promptId=promptService.saveOriginalPrompt(dto,user);
+//        List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
+//
+//        Map<String,Object> map=new HashMap<>();
+//        map.put("optimizedPrompt",optimizedPrompt);
+//        map.put("promptId",promptId);
+//        return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
+//    }
 
     @PostMapping("/create-best-prompt")
     @Operation(summary="최적화 프롬프트 생성 (수정 가능하도록) ",description = "templateKey 값은 editable 로 주세요.")
-    public ResponseEntity<Map<String,Object>> optimizingPrompt(@RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal User user){
-        Long promptId=promptService.saveOriginalPrompt(dto,user);
-        List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto,promptId);
+    public ResponseEntity<Map<String,Object>> optimizingPrompt(
+            @RequestBody OptPromptRequestDto dto, @AuthenticationPrincipal(expression = "user") User user){
 
-        //저장 되는 제목 설정 (질문 내용 요약)
-        String prepareOptimizing = promptService.optimizingPrompt(dto.getQuestion(),dto.getPersona(), dto.getPromptDomain());
-        System.out.println("🖥️ prepareOptimizing:"+prepareOptimizing);
+        List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto);
 
         String result = llmService.createGptAnswerWithPrompt(optimizedPrompt); //LLM 답변 받기
+        System.out.println("🖥️ result:"+result);
+        String summary = promptService.summarizePrompts(dto.getQuestion());
+
         //optimized_prompt 저장
+        Long promptId=promptService.saveOptimizedPrompt(result,dto,user,summary);
 
         Map<String,Object> map=new HashMap<>();
         map.put("optimizedPrompt",result);
@@ -96,7 +97,7 @@ public class PromptController {
     public ResponseEntity<List<Map<LLMModel,PromptResultDto>>> getOrganizedAnswer(
                                                               @RequestParam Long promptId,
                                                               @RequestBody LlmRequestDto dto,
-                                                              @AuthenticationPrincipal User user){
+                                                              @AuthenticationPrincipal(expression = "user") User user){
 
         //최적화 프롬프트 받고 응답 받기
         List<Map<LLMModel,LLMResponseDto>> response=promptService.runByModel(dto);
@@ -108,15 +109,6 @@ public class PromptController {
         return ResponseEntity.ok(result);
     }
 
-
-
-    @PostMapping("/summarize")
-    @Operation(summary="프롬프트 내용 요약하기",description="model 필드 값은 gpt로 주세요!")
-    public ResponseEntity<String> summarizePrompt(@RequestBody LlmRequestDto dto){
-        String prompt=dto.getQuestion();
-        String result=promptService.summarizePrompts(prompt);
-        return ResponseEntity.ok(result);
-    }
 
     @GetMapping("/optimized-prompt-list")
     @Operation(summary="프롬프팅 결과 리스트 조회하기", description = "")

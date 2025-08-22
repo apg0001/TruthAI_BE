@@ -21,6 +21,7 @@ import jpabasic.truthaiserver.exception.ErrorMessages;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 import static jpabasic.truthaiserver.exception.ErrorMessages.*;
@@ -46,15 +47,10 @@ public class PromptService {
     }
 
 
-    //summary 생성해야 (생성형 ai 이용)
-    @Transactional
-    public void summarize(String text){
-
-    }
-
 
 
     //최적화 프롬프트 없이 질문했을 때
+    @Transactional
     public Long savePromptAnswer(String question, List<LlmAnswerDto> results, User user,String summary) {
 
         if (results == null || results.isEmpty()) {
@@ -80,6 +76,7 @@ public class PromptService {
 
 
     //최적화 전 프롬프트 저장
+    @Transactional
     public Long saveOriginalPrompt(OptPromptRequestDto request, User user) {
         String originalPrompt=request.getQuestion();
 
@@ -89,12 +86,20 @@ public class PromptService {
     }
 
     //최적화 프롬프트 저장
-    public void saveOptimizedPrompt(String optimizedPrompt, Long promptId){
-        Prompt prompt=promptRepository.findById(promptId)
-                .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
-        prompt.optimize(optimizedPrompt);
-        System.out.println("✅promptId"+prompt.getId());
-        promptRepository.save(prompt);
+    @Transactional
+    public Long saveOptimizedPrompt(String optimizedPrompt, OptPromptRequestDto dto,User user,String summary){
+        System.out.println(user.getUserBaseInfo());
+
+        String originalPrompt=dto.getQuestion();
+        Prompt prompt=new Prompt();
+        prompt.assignUser(user);
+        prompt.savePrompt(originalPrompt,optimizedPrompt,summary);
+        Prompt saved=promptRepository.save(prompt);
+        Long promptId=saved.getId();
+        Long userId=saved.getUser().getId();
+
+        System.out.println("⭐userId"+userId);
+        return promptId;
     }
 
 
@@ -103,10 +108,10 @@ public class PromptService {
         return promptEngine.execute("summarize",prompt);
     }
 
-    //최적화 프롬프트 생성
-    public String optimizingPrompt(String prompt,String persona,PromptDomain domain){
-        return promptEngine.execute("editable",prompt,persona,domain);
-    }
+//    //최적화 프롬프트 생성
+//    public String optimizingPrompt(String prompt,String persona,PromptDomain domain){
+//        return promptEngine.execute("editable",prompt,persona,domain);
+//    }
 
     public List<Map<LLMModel,LLMResponseDto>> runByModel(LlmRequestDto request){
         Map<LLMModel,?> answer=request.getModels().stream()
@@ -147,32 +152,29 @@ public class PromptService {
 
 
     //최적화된 프롬프트 반환
-    public List<Message> getOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
+    @Transactional
+    public List<Message> getOptimizedPrompt(OptPromptRequestDto dto) {
         String templateKey=dto.getTemplateKey();
 
         List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);
-
-        //db에 저장은 String type으로 ? -> List<Message>로 수정할수도.
-        String optimizedPromptSt=optimizedPrompt.toString();
-        saveOptimizedPrompt(optimizedPromptSt,promptId);
 
         return optimizedPrompt;
     }
 
     //수정할 수 있는 최적화된 프롬프트 반환
     //최적화된 프롬프트 반환
-    public List<Message> getNewOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
-//        Long promptId=saveOriginalPrompt(dto,user);
-        String templateKey=dto.getTemplateKey();
-
-        List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);
-
-        //db에 저장은 String type으로 ? -> List<Message>로 수정할수도.
-        String optimizedPromptSt=optimizedPrompt.toString();
-        saveOptimizedPrompt(optimizedPromptSt,promptId);
-
-        return optimizedPrompt;
-    }
+//    public List<Message> getNewOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
+////        Long promptId=saveOriginalPrompt(dto,user);
+//        String templateKey=dto.getTemplateKey();
+//
+//        List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);
+//
+//        //db에 저장은 String type으로 ? -> List<Message>로 수정할수도.
+//        String optimizedPromptSt=optimizedPrompt.toString();
+//        saveOptimizedPrompt(optimizedPromptSt,promptId);
+//
+//        return optimizedPrompt;
+//    }
 
 
 
@@ -187,6 +189,7 @@ public class PromptService {
                 .toList();
     }
 
+    @Transactional
     public Map<LLMModel,PromptResultDto> mapping(Map<LLMModel,LLMResponseDto> map,User user,Long promptId) {
        return map.entrySet().stream()
                .collect(toMap(
@@ -197,6 +200,8 @@ public class PromptService {
                ));
     }
 
+
+    @Transactional
     public PromptResultDto saveOne(LLMModel model,LLMResponseDto dto,User user,Long promptId) {
 
         Prompt prompt=promptRepository.findById(promptId)
@@ -248,6 +253,42 @@ public class PromptService {
 
         SideBarPromptDto dto= new SideBarPromptDto(prompt,dtoList);
         return dto;
+    }
+
+    public List<PromptListDto> getOptimizedPromptList(Long userId) {
+        List<Prompt> prompts = promptRepository.findPromptWithOptimizedPrompt(userId);
+
+        return prompts.stream()
+                .map(prompt -> new PromptListDto(
+                        prompt.getId(),
+                        prompt.getSummary(),
+                        prompt.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<PromptListDto> getCrosscheckList(Long userId) {
+        List<Prompt> prompts = promptRepository.findPromptsWithAnswersAndScoreNotNull(userId);
+
+        return prompts.stream()
+                .map(prompt -> new PromptListDto(
+                        prompt.getId(),
+                        prompt.getSummary(),
+                        prompt.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public OptimizedPromptResultDto getOptimizedPromptResult(Long promptId) {
+        Prompt prompt = promptRepository.findById(promptId)
+                .orElseThrow(() -> new RuntimeException("Prompt not found"));
+
+        return new OptimizedPromptResultDto(
+                prompt.getId(),
+                prompt.getSummary(),
+                prompt.getOriginalPrompt(),
+                prompt.getOptimizedPrompt()
+        );
     }
 
 
