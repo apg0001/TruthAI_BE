@@ -11,6 +11,8 @@ import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.service.LlmService;
 import jpabasic.truthaiserver.service.sources.SourcesService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
@@ -36,6 +38,24 @@ public class PromptController {
         this.promptService = promptService;
         this.llmService = llmService;
         this.sourcesService = sourcesService;
+    }
+
+    @GetMapping("/side-bar/list")
+    @Operation(summary="사이드바 리스트 조회")
+    public ResponseEntity<List<SideBarPromptListDto>> checkSideBar(@AuthenticationPrincipal(expression = "user") User user) {
+        Long userId=user.getId();
+        List<SideBarPromptListDto> result=promptService.checkSideBar(userId);
+        return ResponseEntity.ok(result);
+    }
+
+
+    @GetMapping("/side-bar/details")
+    @Operation(summary="사이드바에 저장된 프롬프트 상세 조회")
+    public ResponseEntity<SideBarPromptDto> checkSideBarDetails(
+            @RequestParam Long promptId
+    ){
+        SideBarPromptDto result=promptService.checkSideBarDetails(promptId);
+        return ResponseEntity.ok(result);
     }
 
 
@@ -70,13 +90,7 @@ public class PromptController {
         return ResponseEntity.ok(map); //저장된 promptId도 함께 반환.
     }
 
-//    @PostMapping("/edit/my-prompt")
-//    @Operation(summary="반환받은 최적화 프롬프트를 내 맘대로 수정해서 응답 생성 받기")
-//    public ResponseEntity<String> getOptimizedAnswer(@RequestBody LlmRequestDto dto, @AuthenticationPrincipal User user){
-//
-//        String optimizedPrompt=promptService.optimizingPrompt(dto);
-//        return ResponseEntity.ok(optimizedPrompt);
-//    }
+
 
     @PostMapping("/get-best/organized")
     @Operation(summary="최적화 프롬프트를 통해 응답 생성 받기",description = "gpt, claude 사용 가능. templateKey='optimized'로 주세요")
@@ -94,6 +108,8 @@ public class PromptController {
         //정돈된 source로 응답
         return ResponseEntity.ok(result);
     }
+
+
 
     @PostMapping("/summarize")
     @Operation(summary="프롬프트 내용 요약하기",description="model 필드 값은 gpt로 주세요!")

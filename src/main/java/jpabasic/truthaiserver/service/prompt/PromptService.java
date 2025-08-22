@@ -10,6 +10,8 @@ import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.dto.sources.SourcesDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.AnswerRepository;
@@ -220,6 +222,32 @@ public class PromptService {
         PromptResultDto result=new PromptResultDto(answerDto,sources);
         return result;
 
+    }
+
+    //사이드바 리스트 조회
+    public List<SideBarPromptListDto> checkSideBar(Long userId){
+
+        List<Prompt> list=promptRepository.findTop5ByUser_IdOrderByCreatedAtDesc(userId);
+
+        List<SideBarPromptListDto> dtoList = new ArrayList<>();
+        for(Prompt one:list){
+            dtoList.add(SideBarPromptListDto.toDto(one));
+        }
+        return dtoList;
+    }
+
+    public SideBarPromptDto checkSideBarDetails(Long promptId){
+        Prompt prompt=promptRepository.findById(promptId)
+                .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
+
+        List<Answer> answers=prompt.getAnswers();
+        List<AnswerDto> dtoList = new ArrayList<>();
+        for(Answer answer:answers){
+            dtoList.add(AnswerDto.from(answer));
+        }
+
+        SideBarPromptDto dto= new SideBarPromptDto(prompt,dtoList);
+        return dto;
     }
 
 
