@@ -11,6 +11,8 @@ import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.service.LlmService;
 import jpabasic.truthaiserver.service.sources.SourcesService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
@@ -38,11 +40,22 @@ public class PromptController {
         this.sourcesService = sourcesService;
     }
 
-    @GetMapping("/side-bar")
+    @GetMapping("/side-bar/list")
     @Operation(summary="사이드바 리스트 조회")
-    public ResponseEntity<Void> checkSideBar(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<SideBarPromptListDto>> checkSideBar(@AuthenticationPrincipal(expression = "user") User user) {
         Long userId=user.getId();
-        promptService.checkSideBar(userId);
+        List<SideBarPromptListDto> result=promptService.checkSideBar(userId);
+        return ResponseEntity.ok(result);
+    }
+
+
+    @GetMapping("/side-bar/details")
+    @Operation(summary="사이드바에 저장된 프롬프트 상세 조회")
+    public ResponseEntity<SideBarPromptDto> checkSideBarDetails(
+            @RequestParam Long promptId
+    ){
+        SideBarPromptDto result=promptService.checkSideBarDetails(promptId);
+        return ResponseEntity.ok(result);
     }
 
 
