@@ -7,9 +7,7 @@ import jpabasic.truthaiserver.dto.answer.AnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
-import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
-import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.dto.sources.SourcesDto;
@@ -57,7 +55,6 @@ public class PromptService {
 
 
     //최적화 프롬프트 없이 질문했을 때
-    @Transactional
     public Long savePromptAnswer(String question, List<LlmAnswerDto> results, User user,String summary) {
 
         if (results == null || results.isEmpty()) {
@@ -72,10 +69,7 @@ public class PromptService {
         Long promptId;
         try {
             Prompt prompt = new Prompt(question, answers, user, summary);
-            Prompt saved=promptRepository.save(prompt);
-            promptId = saved.getId();
-
-            System.out.println("✅ Saved prompt user ID:"+saved.getUser().getId());
+            promptId = promptRepository.save(prompt).getId();
         } catch (BusinessException e) {
             log.error(e.getMessage());
             throw new BusinessException(PROMPT_SAVE_ERROR);
@@ -95,7 +89,6 @@ public class PromptService {
     }
 
     //최적화 프롬프트 저장
-    @Transactional
     public void saveOptimizedPrompt(String optimizedPrompt, Long promptId){
         Prompt prompt=promptRepository.findById(promptId)
                 .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));

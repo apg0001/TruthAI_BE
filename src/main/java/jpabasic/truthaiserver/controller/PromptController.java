@@ -3,14 +3,13 @@ package jpabasic.truthaiserver.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jpabasic.truthaiserver.domain.LLMModel;
+import jpabasic.truthaiserver.domain.Prompt;
 import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
-import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
-import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
-import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
+import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.service.LlmService;
@@ -119,6 +118,26 @@ public class PromptController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/optimized-prompt-list")
+    @Operation(summary="프롬프팅 결과 리스트 조회하기", description = "")
+    public ResponseEntity<List<PromptListDto>> getOptimizedPromptList(@AuthenticationPrincipal(expression = "user") User user) {
+        Long userId=user.getId();
+        List<PromptListDto> result=promptService.getOptimizedPromptList(userId);
+        return ResponseEntity.ok(result);
+    }
 
+    @GetMapping("/crosscheck-list")
+    @Operation(summary="교차검증(환각) 결과 리스트 조회하기", description = "")
+    public ResponseEntity<List<PromptListDto>> getCrosscheckList(@AuthenticationPrincipal(expression = "user") User user) {
+        Long userId=user.getId();
+        List<PromptListDto> result=promptService.getCrosscheckList(userId);
+        return ResponseEntity.ok(result);
+    }
 
+    @GetMapping("/{promptId}")
+    @Operation(summary="최적화 전/후 프롬프트를 조회합니다.", description = "")
+    public ResponseEntity<OptimizedPromptResultDto> getOptimizedPromptResult(@PathVariable Long promptId){
+        OptimizedPromptResultDto result = promptService.getOptimizedPromptResult(promptId);
+        return ResponseEntity.ok(result);
+    }
 }

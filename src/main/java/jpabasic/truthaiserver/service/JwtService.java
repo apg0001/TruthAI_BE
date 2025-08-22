@@ -36,7 +36,7 @@ public class JwtService {
 
     //리프레시 토큰 발급
     public String generateRefreshToken(jpabasic.truthaiserver.domain.User user) {
-        return generateToken(user.getId(), user.getUserBaseInfo().getNickname(), user.getUserBaseInfo().getEmail(), expiration);
+        return generateToken(user.getId(), user.getUserBaseInfo().getNickname(), user.getUserBaseInfo().getEmail(), refreshExpiration);
     }
 
     //토큰 생성
