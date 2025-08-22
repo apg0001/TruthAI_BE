@@ -24,11 +24,11 @@ public class UserFindService {
 
 
     @Transactional
-    public PersonaResponse setPersona(PersonaRequest personaRequest,String email) {
-        User user=findUserByEmail(email)
-                .orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+    public PersonaResponse setPersona(PersonaRequest personaRequest,User user) {
+        System.out.println(user.getUserBaseInfo());
 
         user.getUserBaseInfo().updatePersona(personaRequest.persona());
+        userRepository.save(user); // 🤨
         return new PersonaResponse(user.getUserBaseInfo().getPersona());
     }
 

@@ -64,9 +64,9 @@ public class UserController {
     @Operation(summary = "유저 페르소나 기본 설정")
     public ResponseEntity<PersonaResponse> setPersona(
             @RequestBody PersonaRequest req,
-            @AuthenticationPrincipal String email){
+            @AuthenticationPrincipal(expression = "user") User user){
 
-        PersonaResponse res=userFindService.setPersona(req, email);
+        PersonaResponse res=userFindService.setPersona(req, user);
 
         return ResponseEntity.ok(res);
     }
@@ -75,10 +75,7 @@ public class UserController {
     @GetMapping("/persona")
     @Operation(summary = "유저 기본 설정한 페르소나 조회")
     public ResponseEntity<PersonaResponse> getPersona(
-            @AuthenticationPrincipal String email){
-
-        User user=userFindService.findUserByEmail(email)
-                .orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+            @AuthenticationPrincipal(expression = "user") User user){
 
         String persona=user.getUserBaseInfo().getPersona();
         PersonaResponse res=new PersonaResponse(persona);
