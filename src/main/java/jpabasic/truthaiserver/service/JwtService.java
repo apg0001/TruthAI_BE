@@ -31,21 +31,23 @@ public class JwtService {
 
     // 엑세스토큰 발급
     public String generateAccessToken(jpabasic.truthaiserver.domain.User user) {
-        return generateToken(user.getId(), expiration);
+        return generateToken(user.getId(), user.getUserBaseInfo().getNickname(), user.getUserBaseInfo().getEmail(), expiration);
     }
 
     //리프레시 토큰 발급
     public String generateRefreshToken(jpabasic.truthaiserver.domain.User user) {
-        return generateToken(user.getId(), refreshExpiration);
+        return generateToken(user.getId(), user.getUserBaseInfo().getNickname(), user.getUserBaseInfo().getEmail(), expiration);
     }
 
     //토큰 생성
-    private String generateToken(Long userId, long expirationTime) {
+    private String generateToken(Long userId, String username, String email, long expirationTime) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationTime);
 
         return Jwts.builder()
                 .setSubject(userId.toString())
+                .claim("username", username)
+                .claim("email", email)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS256, secretKey)
@@ -68,7 +70,9 @@ public class JwtService {
         try {
             Claims claims = parseToken(refreshToken).getBody();
             Long userId = Long.valueOf(claims.getSubject());
-            return generateToken(userId, expiration);
+            String username = claims.get("username", String.class);
+            String email = claims.get("email", String.class);
+            return generateToken(userId, username, email, expiration);
         } catch (JwtException e) {
             throw new BusinessException(ErrorMessages.Invalid_Token);
         }
