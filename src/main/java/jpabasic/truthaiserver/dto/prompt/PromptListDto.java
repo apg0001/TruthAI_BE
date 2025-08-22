@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PromptListDto {
     private Long id;
-    private String originalPrompt;
-    private String optimizedPrompt;
+    private String summary;
     private LocalDateTime createdAt;
 }

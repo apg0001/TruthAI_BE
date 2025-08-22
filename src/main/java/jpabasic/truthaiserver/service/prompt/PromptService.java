@@ -260,21 +260,19 @@ public class PromptService {
         return prompts.stream()
                 .map(prompt -> new PromptListDto(
                         prompt.getId(),
-                        prompt.getOriginalPrompt(),
-                        prompt.getOptimizedPrompt(),
+                        prompt.getSummary(),
                         prompt.getCreatedAt()
                 ))
                 .collect(Collectors.toList());
     }
 
     public List<PromptListDto> getCrosscheckList(Long userId){
-        List<Prompt> prompts = promptRepository.findPromptWithOptimizedPrompt(userId);
+        List<Prompt> prompts = promptRepository.findPromptsWithAnswersAndScoreNotNull(userId);
 
         return prompts.stream()
                 .map(prompt -> new PromptListDto(
                         prompt.getId(),
-                        prompt.getOriginalPrompt(),
-                        prompt.getOptimizedPrompt(),
+                        prompt.getSummary(),
                         prompt.getCreatedAt()
                 ))
                 .collect(Collectors.toList());

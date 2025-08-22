@@ -128,7 +128,7 @@ public class PromptController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/optimized-prompt-list")
+    @GetMapping("/crosscheck-list")
     @Operation(summary="교차검증(환각) 결과 리스트 조회하기", description = "")
     public ResponseEntity<List<PromptListDto>> getCrosscheckList(@AuthenticationPrincipal(expression = "user") User user) {
         Long userId=user.getId();
