@@ -57,6 +57,7 @@ public class PromptService {
 
 
     //최적화 프롬프트 없이 질문했을 때
+    @Transactional
     public Long savePromptAnswer(String question, List<LlmAnswerDto> results, User user,String summary) {
 
         if (results == null || results.isEmpty()) {
@@ -71,7 +72,10 @@ public class PromptService {
         Long promptId;
         try {
             Prompt prompt = new Prompt(question, answers, user, summary);
-            promptId = promptRepository.save(prompt).getId();
+            Prompt saved=promptRepository.save(prompt);
+            promptId = saved.getId();
+
+            System.out.println("✅ Saved prompt user ID:"+saved.getUser().getId());
         } catch (BusinessException e) {
             log.error(e.getMessage());
             throw new BusinessException(PROMPT_SAVE_ERROR);
@@ -91,6 +95,7 @@ public class PromptService {
     }
 
     //최적화 프롬프트 저장
+    @Transactional
     public void saveOptimizedPrompt(String optimizedPrompt, Long promptId){
         Prompt prompt=promptRepository.findById(promptId)
                 .orElseThrow(()->new BusinessException(PROMPT_NOT_FOUND));
