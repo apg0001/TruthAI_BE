@@ -10,6 +10,7 @@ import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
+import jpabasic.truthaiserver.dto.prompt.PromptListDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
@@ -119,6 +120,19 @@ public class PromptController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/optimized-prompt-list")
+    @Operation(summary="프롬프팅 결과 리스트 조회하기", description = "")
+    public ResponseEntity<List<PromptListDto>> getOptimizedPromptList(@AuthenticationPrincipal(expression = "user") User user) {
+        Long userId=user.getId();
+        List<PromptListDto> result=promptService.getOptimizedPromptList(userId);
+        return ResponseEntity.ok(result);
+    }
 
-
+    @GetMapping("/optimized-prompt-list")
+    @Operation(summary="교차검증(환각) 결과 리스트 조회하기", description = "")
+    public ResponseEntity<List<PromptListDto>> getCrosscheckList(@AuthenticationPrincipal(expression = "user") User user) {
+        Long userId=user.getId();
+        List<PromptListDto> result=promptService.getCrosscheckList(userId);
+        return ResponseEntity.ok(result);
+    }
 }

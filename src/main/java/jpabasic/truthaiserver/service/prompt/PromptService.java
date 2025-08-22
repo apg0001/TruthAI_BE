@@ -9,6 +9,7 @@ import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.prompt.LLMResponseDto;
 import jpabasic.truthaiserver.dto.prompt.OptPromptRequestDto;
+import jpabasic.truthaiserver.dto.prompt.PromptListDto;
 import jpabasic.truthaiserver.dto.prompt.PromptResultDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
@@ -23,6 +24,7 @@ import jpabasic.truthaiserver.exception.ErrorMessages;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 import static jpabasic.truthaiserver.exception.ErrorMessages.*;
@@ -252,7 +254,29 @@ public class PromptService {
         return dto;
     }
 
+    public List<PromptListDto> getOptimizedPromptList(Long userId){
+        List<Prompt> prompts = promptRepository.findPromptWithOptimizedPrompt(userId);
 
+        return prompts.stream()
+                .map(prompt -> new PromptListDto(
+                        prompt.getId(),
+                        prompt.getOriginalPrompt(),
+                        prompt.getOptimizedPrompt(),
+                        prompt.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
 
+    public List<PromptListDto> getCrosscheckList(Long userId){
+        List<Prompt> prompts = promptRepository.findPromptWithOptimizedPrompt(userId);
 
+        return prompts.stream()
+                .map(prompt -> new PromptListDto(
+                        prompt.getId(),
+                        prompt.getOriginalPrompt(),
+                        prompt.getOptimizedPrompt(),
+                        prompt.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
 }
