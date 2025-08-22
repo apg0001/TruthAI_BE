@@ -33,7 +33,7 @@ public class AnswerController {
 
     @PostMapping("/models")
     @Operation(summary = "AI 교차검증 > 프롬프트 최적화 없이 유저가 직접 작성한 질문으로 물어볼 때", description = "models 필드는 선택한 모델들(gpt/claude/gemini) 을 리스트로 주세요. ")
-    public ResponseEntity<AnswerResultDto> getLlmAnswer(@RequestBody LlmNoPromptRequestDto request, @AuthenticationPrincipal User user) {
+    public ResponseEntity<AnswerResultDto> getLlmAnswer(@RequestBody LlmNoPromptRequestDto request, @AuthenticationPrincipal(expression = "user") User user) {
 
         List<LLMModel> modelEnums = request.toModelEnums();
         String question = request.question();

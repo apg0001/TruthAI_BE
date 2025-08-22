@@ -36,7 +36,9 @@ public class PromptEngine {
 
     //persona 없는 경우
     public String execute(String templateKey,String question){
-        return getOptimizedAnswerByGpt(templateKey,new Message(question),null,null);
+         String result=getOptimizedAnswerByGpt(templateKey,new Message(question),null,null);
+        System.out.println("✅ summarize result:"+ result);
+        return result;
     }
 
     //최적화 프롬프트 생성 (new🏃🏃)
@@ -55,7 +57,7 @@ public class PromptEngine {
         return optimizedTemplate.getOptimizedPrompt(domain,persona,message);
     }
 
-    //최적화 프롬프트 반환(List<Message>) -> 실행 까쥐~
+    //최적화 프롬프트 반환(List<Message>)
     public List<Message> executeInternal(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain){
         BasePromptTemplate template=registry.getByKey(templateKey);
         System.out.println("🍪template:"+template);
@@ -113,6 +115,7 @@ public class PromptEngine {
 
     //gpt 실행
     public String getOptimizedAnswerByGpt(String templateKey, Message message, @Nullable String persona, @Nullable PromptDomain domain){
+        //templateKey에 맞는 template 호출 -> gpt에 request 보낼 수 있는 형태로 리턴
         List<Message> result=executeInternal(templateKey,message,persona,domain);
         return llmService.createGptAnswerWithPrompt(result);
     }

@@ -41,4 +41,9 @@ public class SummarizeTemplate extends BasePromptTemplate {
     public String key() {
         return "summarize";
     }
+
+    @Override
+    public String globalGuidelines(){
+        return "";
+    }
 }
