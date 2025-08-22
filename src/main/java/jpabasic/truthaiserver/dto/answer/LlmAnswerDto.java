@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class LlmAnswerDto {
 
@@ -19,6 +18,12 @@ public class LlmAnswerDto {
 
     public Answer toEntity() {
         return new Answer(this.llmModel, this.answer);
+    }
+
+
+    public LlmAnswerDto(LLMModel llmModel, String answer){
+        this.llmModel = llmModel;
+        this.answer = answer;
     }
 
 }

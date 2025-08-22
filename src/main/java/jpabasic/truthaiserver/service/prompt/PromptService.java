@@ -57,9 +57,9 @@ public class PromptService {
 
 
     //최적화 프롬프트 없이 질문했을 때
-    public void savePromptAnswer(String question, List<LlmAnswerDto> results, User user,String summary) {
+    public Long savePromptAnswer(String question, List<LlmAnswerDto> results, User user,String summary) {
 
-        if(results==null || results.isEmpty()){
+        if (results == null || results.isEmpty()) {
             throw new BusinessException(ErrorMessages.MESSAGE_NULL_ERROR);
         }
 
@@ -68,14 +68,16 @@ public class PromptService {
                 .map(dto -> dto.toEntity())
                 .toList();
 
+        Long promptId;
         try {
-            Prompt prompt = new Prompt(question, answers, user,summary);
-            promptRepository.save(prompt);
+            Prompt prompt = new Prompt(question, answers, user, summary);
+            promptId = promptRepository.save(prompt).getId();
         } catch (BusinessException e) {
             log.error(e.getMessage());
             throw new BusinessException(PROMPT_SAVE_ERROR);
         }
 
+        return promptId;
     }
 
 
