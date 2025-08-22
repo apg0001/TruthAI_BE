@@ -1,5 +1,9 @@
 package jpabasic.truthaiserver.service;
 
+import jpabasic.truthaiserver.domain.Prompt;
+import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
+import jpabasic.truthaiserver.repository.PromptRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Claim;
@@ -25,6 +29,7 @@ import java.net.URL;
 public class CrossCheckService {
 
     private final AnswerRepository answerRepository;
+    private final PromptRepository promptRepository;
     private final ClaimRepository claimRepository;
     private final EmbeddingService embeddingService;
     private final jpabasic.truthaiserver.repository.SourceRepository sourceRepository;
@@ -294,5 +299,19 @@ public class CrossCheckService {
                         answer.getScore()
                 ))
                 .collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    //사이드바 리스트 조회
+    public List<SideBarPromptListDto> checkSideBar(Long userId){
+
+        List<Prompt> list=promptRepository.findPromptsWithAnswersAndScoreNull(userId, PageRequest.of(0, 5));
+        List<SideBarPromptListDto> dtoList=new ArrayList<>();
+
+        for(Prompt one:list){
+            dtoList.add(SideBarPromptListDto.toDto(one));
+        }
+        return dtoList;
     }
 }
