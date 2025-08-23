@@ -9,4 +9,6 @@ import lombok.Setter;
 public class CreateFolderRequest {
     @NotNull
     private String folderName;
+    @NotNull
+    private String folderType;
 }

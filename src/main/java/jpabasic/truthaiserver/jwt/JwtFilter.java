@@ -43,11 +43,26 @@ public class JwtFilter extends OncePerRequestFilter {
                     if (jwtService.validateAccessToken(token)) {
                         // 토큰이 유효한 경우
                         authenticateUser(token, request);
+                    } else {
+                        // 토큰이 만료되었거나 유효하지 않은 경우
+                        log.debug("JWT 토큰이 유효하지 않음");
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.getWriter().write("{\"error\":\"토큰이 만료되었거나 유효하지 않습니다.\",\"code\":\"TOKEN_EXPIRED\"}");
+                        return;
                     }
                 } catch (Exception e) {
-                    // 토큰 검증 실패 시 로그만 남기고 계속 진행
+                    // 토큰 파싱 실패 등 예외 발생 시
                     log.debug("JWT 토큰 검증 실패: {}", e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"error\":\"토큰 형식이 올바르지 않습니다.\",\"code\":\"INVALID_TOKEN\"}");
+                    return;
                 }
+            } else {
+                // 토큰이 없는 경우
+                log.debug("JWT 토큰이 요청에 포함되지 않음");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"인증 토큰이 필요합니다.\",\"code\":\"TOKEN_REQUIRED\"}");
+                return;
             }
         }
 

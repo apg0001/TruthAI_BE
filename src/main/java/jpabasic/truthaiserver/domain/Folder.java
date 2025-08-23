@@ -22,6 +22,9 @@ public class Folder {
     @Column(length = 255, nullable = false)
     private String name;
 
+    @Column
+    private String type;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -36,4 +39,5 @@ public class Folder {
     public void rename(String newName) {
         this.name = newName;
     }
+    public void assignType(String type) { this.type = type; }
 }
