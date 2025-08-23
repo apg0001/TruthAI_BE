@@ -6,7 +6,7 @@ import jpabasic.truthaiserver.domain.User;
 import jpabasic.truthaiserver.domain.Folder;
 import jpabasic.truthaiserver.dto.folder.CreateFolderRequest;
 import jpabasic.truthaiserver.dto.folder.FolderSummaryResponse;
-import jpabasic.truthaiserver.dto.folder.PromptListDto;
+import jpabasic.truthaiserver.dto.folder.PromptListResponse;
 import jpabasic.truthaiserver.repository.FolderRepository;
 import jpabasic.truthaiserver.repository.PromptRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +36,9 @@ public class FolderService {
 
     // 폴더 목록 조회
     @Transactional
-    public List<FolderSummaryResponse> listFolders(User user) {
+    public List<FolderSummaryResponse> listFolders(User user, String folderType) {
         Long userId = user.getId();
-        return folderRepository.findByUserId(userId).stream()
+        return folderRepository.findFoldersByUserIdAndType(userId, folderType).stream()
                 .map(f -> new FolderSummaryResponse(
                         f.getId(),
                         f.getName(),
@@ -68,18 +68,18 @@ public class FolderService {
     }
 
     @Transactional
-    public List<PromptListDto> getPromptsInFolder(Long folderId){
+    public List<PromptListResponse> getPromptsInFolder(Long folderId){
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("폴더가 존재하지 않습니다."));
 
         // 최신순으로 프롬프트 조회
         List<Prompt> prompts = promptRepository.findByFolderIdOrderByCreatedAtDesc(folderId);
 
-        List<PromptListDto> list = new ArrayList<>(prompts.size());
+        List<PromptListResponse> list = new ArrayList<>(prompts.size());
         for (Prompt p : prompts){
-            list.add(new PromptListDto(
+            list.add(new PromptListResponse(
                     p.getId(),
-                    p.getOriginalPrompt(),
+                    p.getSummary(),
                     p.getCreatedAt()
             ));
         }

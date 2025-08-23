@@ -26,10 +26,11 @@ public class FolderController {
     }
 
     // 폴더 조회
-    @GetMapping
+    @GetMapping("/{folderType}")
     @Operation(summary = "폴더 목록 조회")
-    public List<FolderSummaryResponse> list(@AuthenticationPrincipal(expression = "user") User user) {
-        return folderService.listFolders(user);
+    public List<FolderSummaryResponse> getPromptList(@AuthenticationPrincipal(expression = "user") User user,
+                                                     @PathVariable String folderType) {
+        return folderService.listFolders(user, folderType);
     }
 
     // 프롬프트를 폴더에 저장
@@ -50,7 +51,7 @@ public class FolderController {
 
     @GetMapping("/{folderId}/{type}")
     @Operation(summary = "폴더 내 프롬프트 목록 조회", description = "folderId 폴더에 저장된 프롬프트 리스트를 반환합니다.")
-    public List<PromptListDto> getPromptsInForder(
+    public List<PromptListResponse> getPromptsInForder(
             @PathVariable Long folderId,
             @PathVariable String type
     ){

@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-public class PromptListDto {
+public class PromptListResponse {
     private Long id;
-    private String originalPrompt;
+    private String summary;
     private LocalDateTime createdAt;
 }
