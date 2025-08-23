@@ -27,6 +27,7 @@ public class FolderService {
     public Long createFolder(CreateFolderRequest request, User user) {
         Folder folder = new Folder();
         folder.assignUser(user);
+        folder.assignType(request.getFolderType());
         folder.rename(request.getFolderName());
 
         Folder saved = folderRepository.save(folder);

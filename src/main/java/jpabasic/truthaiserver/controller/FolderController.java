@@ -48,11 +48,13 @@ public class FolderController {
         folderService.renameFolder(folderId, request.getName());
     }
 
-    @GetMapping("/{folderId}")
+    @GetMapping("/{folderId}/{type}")
     @Operation(summary = "폴더 내 프롬프트 목록 조회", description = "folderId 폴더에 저장된 프롬프트 리스트를 반환합니다.")
     public List<PromptListDto> getPromptsInForder(
-            @PathVariable Long folderId
+            @PathVariable Long folderId,
+            @PathVariable String type
     ){
-        return folderService.getPromptsInFolder(folderId);
+        return folderService
+                .getPromptsInFolder(folderId);
     }
 }
