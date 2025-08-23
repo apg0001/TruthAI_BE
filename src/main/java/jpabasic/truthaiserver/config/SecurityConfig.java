@@ -24,13 +24,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        // api 테스트 위해서 모든 권한 열어둠
-                        .anyRequest().permitAll()
-                        // 실제 배포 시 swagger랑 로그인만 열어둠
-//                        .requestMatchers("/api/auth", "/swagger-ui/**").permitAll()
-//                        .anyRequest().authenticated()
+                        // 공개 엔드포인트 (인증 불필요)
+                        .requestMatchers(
+                                "/auth/login",
+                                "/auth/token/refresh",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/error"
+                        ).permitAll()
+                        // 나머지 모든 요청은 인증 필요
+                        .anyRequest().authenticated()
                 )
-
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers((headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))

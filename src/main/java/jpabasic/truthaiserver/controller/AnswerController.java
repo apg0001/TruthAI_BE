@@ -38,8 +38,6 @@ public class AnswerController {
         List<LLMModel> modelEnums = request.toModelEnums();
         String question = request.question();
 
-        System.out.println("\n\n----------\nLLM 답변\nuserId"+user.getId()+"\n\n==========\n\n");
-
         //저장 되는 제목 설정 (질문 내용 요약)
         String summary = promptService.summarizePrompts(question);
 
