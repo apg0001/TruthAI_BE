@@ -74,8 +74,7 @@ public class UserController {
 
     @GetMapping("/persona")
     @Operation(summary = "유저 기본 설정한 페르소나 조회")
-    public ResponseEntity<PersonaResponse> getPersona(
-            @AuthenticationPrincipal(expression = "user") User user){
+    public ResponseEntity<PersonaResponse> getPersona(@AuthenticationPrincipal(expression = "user") User user){
 
         String persona=user.getUserBaseInfo().getPersona();
         PersonaResponse res=new PersonaResponse(persona);
