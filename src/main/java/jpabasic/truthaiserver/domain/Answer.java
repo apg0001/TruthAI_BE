@@ -31,6 +31,9 @@ public class Answer extends BaseEntity{
     @Column(name = "score")
     private Float score;
 
+    @Column(name = "level")
+    private Integer level;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prompt_id")
     private Prompt prompt;
@@ -46,9 +49,9 @@ public class Answer extends BaseEntity{
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL)
     private List<Claim> claims = new ArrayList<>();
 
-    public void updateOpinionAndScore(String opinion, Float score) {
-        this.opinion = opinion;
+    public void updateScoreAndLevel(Float score, Integer level) {
         this.score = score;
+        this.level = level;
     }
   
     public Answer(LLMModel model,String answer){

@@ -90,7 +90,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        return http.addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",

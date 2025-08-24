@@ -354,6 +354,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 } else {
                     log.debug("JWT 사용자 조회 실패 - userId: {}", userId);
                 }
+                filterChain.doFilter(request, response);
             } else {
                 // 유효하지 않은 토큰: 응답을 여기서 만들지 말고 그대로 통과 (보호 경로면 EntryPoint가 401)
                 log.debug("JWT 유효성 실패(만료/서명오류 등)");
