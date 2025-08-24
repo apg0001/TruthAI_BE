@@ -3,6 +3,7 @@ package jpabasic.truthaiserver.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
 import jpabasic.truthaiserver.domain.User;
+import jpabasic.truthaiserver.domain.UserBaseInfo;
 import jpabasic.truthaiserver.dto.user.GoogleInfoDto;
 import jpabasic.truthaiserver.dto.persona.PersonaRequest;
 import jpabasic.truthaiserver.dto.persona.PersonaResponse;
@@ -25,7 +26,7 @@ import java.util.Map;
 import static jpabasic.truthaiserver.exception.ErrorMessages.USER_NULL_ERROR;
 
 @RestController
-@RequestMapping("/auth")
+//@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
@@ -35,7 +36,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserFindService userFindService;
 
-    @PostMapping("/login")
+    @PostMapping("/auth/login")
     @Operation(summary = "구글 로그인", description = "구글 로그인 인가 코드를 받아 사용자 인증을 합니다.")
     public ResponseEntity<Map<String, String>> login(@RequestBody TokenDto dto, HttpSession session) {
         String authorizationCode = dto.getToken(); // 클라이언트에서 전달받은 인가 코드
@@ -54,7 +55,7 @@ public class UserController {
         return ResponseEntity.ok(tokens);  // 액세스 토큰과 리프레시 토큰 반환
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/auth/logout")
     @Operation(summary = "로그아웃", description = "사용자 로그아웃")
     public ResponseEntity<Void> logout(HttpSession session) {
         session.invalidate();
@@ -67,8 +68,7 @@ public class UserController {
             @RequestBody PersonaRequest req,
             @AuthenticationPrincipal(expression = "user") User user){
 
-        Long userId=user.getId();
-        PersonaResponse res=userFindService.setPersona(req, userId);
+        PersonaResponse res=userFindService.setPersona(req, user);
 
         return ResponseEntity.ok(res);
     }
@@ -77,13 +77,15 @@ public class UserController {
     @GetMapping("/persona")
     @Operation(summary = "유저 기본 설정한 페르소나 조회")
     public ResponseEntity<PersonaResponse> getPersona(
-            @AuthenticationPrincipal(expression = "user") User user){
+            @AuthenticationPrincipal(expression="user") User user){
 
-        Long userId=user.getId();
-        User me=userRepository.findById(userId).orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+        System.out.println("🥺user"+user.getId());
 
-        String persona=me.getUserBaseInfo().getPersona();
+        UserBaseInfo info=user.getUserBaseInfo();
+        String persona=info.getPersona();
+
         PersonaResponse res=new PersonaResponse(persona);
         return ResponseEntity.ok(res);
+
     }
 }

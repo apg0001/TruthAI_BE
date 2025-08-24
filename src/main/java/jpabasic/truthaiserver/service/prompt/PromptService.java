@@ -66,6 +66,7 @@ public class PromptService {
         try {
             Prompt prompt = new Prompt(question, answers, user, summary);
             promptId = promptRepository.save(prompt).getId();
+
         } catch (BusinessException e) {
             log.error(e.getMessage());
             throw new BusinessException(PROMPT_SAVE_ERROR);

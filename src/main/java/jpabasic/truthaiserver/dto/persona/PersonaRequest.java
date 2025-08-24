@@ -1,3 +1,10 @@
 package jpabasic.truthaiserver.dto.persona;
 
-public record PersonaRequest (String persona){}
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class PersonaRequest{
+    private String persona;
+}

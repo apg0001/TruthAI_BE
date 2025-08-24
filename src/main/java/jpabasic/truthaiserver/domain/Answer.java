@@ -1,6 +1,7 @@
 package jpabasic.truthaiserver.domain;
 
 import jakarta.persistence.*;
+import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -62,4 +63,5 @@ public class Answer extends BaseEntity{
         this.prompt = prompt;
         this.user = user;
     }
+
 }
