@@ -13,6 +13,7 @@ import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptDto;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
 import jpabasic.truthaiserver.service.LlmService;
+import jpabasic.truthaiserver.service.gpt.GptService;
 import jpabasic.truthaiserver.service.sources.SourcesService;
 import jpabasic.truthaiserver.service.prompt.PromptService;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +30,13 @@ import java.util.Map;
 public class PromptController {
 
     private final PromptService promptService;
-    private final LlmService llmService;
+    private final GptService gptService;
     private final SourcesService sourcesService;
 
-    public PromptController(PromptService promptService,LlmService llmService,SourcesService sourcesService)
+    public PromptController(PromptService promptService,GptService gptService,SourcesService sourcesService)
     {
         this.promptService = promptService;
-        this.llmService = llmService;
+        this.gptService=gptService;
         this.sourcesService = sourcesService;
     }
 
@@ -77,7 +78,7 @@ public class PromptController {
 
         List<Message> optimizedPrompt=promptService.getOptimizedPrompt(dto);
 
-        String result = llmService.createGptAnswerWithPrompt(optimizedPrompt); //LLM 답변 받기
+        String result = gptService.createGptAnswerWithPrompt(optimizedPrompt); //LLM 답변 받기
         System.out.println("🖥️ result:"+result);
         String summary = promptService.summarizePrompts(dto.getQuestion());
 
@@ -98,6 +99,8 @@ public class PromptController {
                                                               @RequestParam Long promptId,
                                                               @RequestBody LlmRequestDto dto,
                                                               @AuthenticationPrincipal(expression = "user") User user){
+
+
 
         //최적화 프롬프트 받고 응답 받기
         List<Map<LLMModel,LLMResponseDto>> response=promptService.runByModel(dto);

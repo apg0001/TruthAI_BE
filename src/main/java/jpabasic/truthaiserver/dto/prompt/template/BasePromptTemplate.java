@@ -21,7 +21,10 @@ public abstract class BasePromptTemplate {
     private List<Message> executeInternalRender(Message message, List<Message> msgs) {
         Map<String, Object> vars = new HashMap<>();
 
-        msgs.add(new Message("system", globalGuidelines()));
+        String globalGuidelines=globalGuidelines();
+        if(globalGuidelines!=null && !globalGuidelines.isEmpty()) {
+            msgs.add(new Message("system", globalGuidelines));
+        }
         String domain = domainGuidelines();
         if (domain != null && !domain.isBlank()) {
             msgs.add(new Message("system", domain));
