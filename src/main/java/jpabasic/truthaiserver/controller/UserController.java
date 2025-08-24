@@ -9,6 +9,7 @@ import jpabasic.truthaiserver.dto.persona.PersonaResponse;
 import jpabasic.truthaiserver.dto.user.TokenDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.repository.UserRepository;
+import jpabasic.truthaiserver.security.CustomUserDetails;
 import jpabasic.truthaiserver.service.LoginService;
 import jpabasic.truthaiserver.service.UserFindService;
 import lombok.RequiredArgsConstructor;
@@ -64,8 +65,9 @@ public class UserController {
     @Operation(summary = "유저 페르소나 기본 설정")
     public ResponseEntity<PersonaResponse> setPersona(
             @RequestBody PersonaRequest req,
-            @AuthenticationPrincipal(expression = "user") User user){
+            @AuthenticationPrincipal CustomUserDetails me){
 
+        User user=me.getUser();
         PersonaResponse res=userFindService.setPersona(req, user);
 
         return ResponseEntity.ok(res);
