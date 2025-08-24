@@ -36,17 +36,38 @@ public class Prompt extends BaseEntity{
     @OneToMany(mappedBy = "prompt", cascade = CascadeType.ALL)
     private List<Answer> answers = new ArrayList<>();
 
+    // answers 리스트 getter (Lombok @Getter와 함께 작동)
+    public List<Answer> getAnswers() {
+        return answers;
+    }
+
     public Prompt(String originalPrompt,List<Answer> answers,User user,String summary) {
         this.originalPrompt = originalPrompt;
         this.answers = answers;
         this.user = user;
         this.summary = summary;
+        
+        // 양방향 관계 설정: 각 Answer의 prompt와 user 설정
+        if (answers != null) {
+            for (Answer answer : answers) {
+                answer.setPrompt(this);
+                answer.setUser(user);
+            }
+        }
     }
 
     public Prompt(String originalPrompt,List<Answer> answers,User user) {
         this.originalPrompt = originalPrompt;
         this.answers = answers;
         this.user = user;
+        
+        // 양방향 관계 설정: 각 Answer의 prompt와 user 설정
+        if (answers != null) {
+            for (Answer answer : answers) {
+                answer.setPrompt(this);
+                answer.setUser(user);
+            }
+        }
     }
 
     public void assignUser(User user) {
@@ -69,6 +90,11 @@ public class Prompt extends BaseEntity{
 
     public void assignFolder(Folder folder) {
         this.folder = folder;
+    }
+
+    // answers 리스트 설정을 위한 메서드 추가
+    public void setAnswers(List<Answer> answers) {
+        this.answers = answers;
     }
 
 }
