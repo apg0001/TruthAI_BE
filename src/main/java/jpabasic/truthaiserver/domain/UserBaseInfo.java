@@ -20,7 +20,6 @@ public class UserBaseInfo {
 
     private String profilePictureUrl;
 
-    @Column
     private String persona;
 
     public UserBaseInfo(String email, String nickname, String profilePictureUrl) {

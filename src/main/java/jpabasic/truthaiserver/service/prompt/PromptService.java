@@ -67,6 +67,7 @@ public class PromptService {
             // Prompt 생성 시 생성자에서 각 Answer의 prompt와 user 관계를 자동 설정
             Prompt prompt = new Prompt(question, answers, user, summary);
             promptId = promptRepository.save(prompt).getId();
+
         } catch (BusinessException e) {
             log.error(e.getMessage());
             throw new BusinessException(PROMPT_SAVE_ERROR);

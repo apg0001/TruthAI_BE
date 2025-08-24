@@ -2,6 +2,7 @@ package jpabasic.truthaiserver.service;
 
 import jakarta.transaction.Transactional;
 import jpabasic.truthaiserver.domain.User;
+import jpabasic.truthaiserver.domain.UserBaseInfo;
 import jpabasic.truthaiserver.dto.persona.PersonaRequest;
 import jpabasic.truthaiserver.dto.persona.PersonaResponse;
 import jpabasic.truthaiserver.exception.BusinessException;
@@ -24,11 +25,11 @@ public class UserFindService {
 
 
     @Transactional
-    public PersonaResponse setPersona(PersonaRequest personaRequest,Long userId) {
-        User user=userRepository.findById(userId).orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+    public PersonaResponse setPersona(PersonaRequest personaRequest,User user) {
+        UserBaseInfo info=user.getUserBaseInfo();
 
-        user.getUserBaseInfo().updatePersona(personaRequest.persona());
-        userRepository.save(user); // 🤨
+        info.updatePersona(personaRequest.getPersona());
+        userRepository.save(user);
         return new PersonaResponse(user.getUserBaseInfo().getPersona());
     }
 

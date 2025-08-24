@@ -1,6 +1,7 @@
 package jpabasic.truthaiserver.domain;
 
 import jakarta.persistence.*;
+import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,6 +67,7 @@ public class Answer extends BaseEntity{
         this.user = user;
     }
 
+
     // 양방향 관계 설정을 위한 setter 메서드들
     public void setPrompt(Prompt prompt) {
         this.prompt = prompt;
@@ -74,4 +76,5 @@ public class Answer extends BaseEntity{
     public void setUser(User user) {
         this.user = user;
     }
+
 }
