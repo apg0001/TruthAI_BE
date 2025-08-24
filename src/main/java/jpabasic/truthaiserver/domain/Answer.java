@@ -62,4 +62,13 @@ public class Answer extends BaseEntity{
         this.prompt = prompt;
         this.user = user;
     }
+
+    // 양방향 관계 설정을 위한 setter 메서드들
+    public void setPrompt(Prompt prompt) {
+        this.prompt = prompt;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
