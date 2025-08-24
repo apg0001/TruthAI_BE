@@ -6,6 +6,8 @@ import jpabasic.truthaiserver.dto.answer.LlmAnswerDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.repository.AnswerRepository;
+import jpabasic.truthaiserver.service.claude.ClaudeService;
+import jpabasic.truthaiserver.service.gpt.GptService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +21,13 @@ public class AnswerService {
 
 
     private final LlmService llmService;
-    private final AnswerRepository answerRepository;
+    private final ClaudeService claudeService;
+    private final GptService gptService;
 
-    public AnswerService(LlmService llmService,AnswerRepository answerRepository) {
+    public AnswerService(LlmService llmService, ClaudeService claudeService, GptService gptService) {
         this.llmService=llmService;
-        this.answerRepository=answerRepository;
+        this.claudeService=claudeService;
+        this.gptService = gptService;
     }
 
 
@@ -37,8 +41,8 @@ public class AnswerService {
 
         return models.stream()
                 .map(model -> switch (model) {
-                    case GPT -> toDto(GPT, llmService.createGptAnswer(question));
-                    case CLAUDE -> toDto(CLAUDE, llmService.createClaudeAnswer(question));
+                    case GPT -> toDto(GPT, gptService.createGptAnswer(question));
+                    case CLAUDE -> toDto(CLAUDE, claudeService.createClaudeAnswer(question));
                     case PERPLEXITY -> toDto(PERPLEXITY, llmService.createPerplexityAnswer(question));
                     case GEMINI -> toDto(GEMINI, llmService.createGeminiAnswer(question));
                     default -> throw new BusinessException(ErrorMessages.LLM_MODEL_ERROR);

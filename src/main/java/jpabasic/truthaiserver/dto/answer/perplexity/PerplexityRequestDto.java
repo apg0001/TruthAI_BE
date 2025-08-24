@@ -28,4 +28,11 @@ public class PerplexityRequestDto {
         this.maxTokens=500;
         this.temperature=0.0;
     }
+
+    public PerplexityRequestDto(List<Message> messageList){
+        this.model="sonar";
+        this.messages=messageList;
+        this.maxTokens=500;
+        this.temperature=0.0;
+    }
 }

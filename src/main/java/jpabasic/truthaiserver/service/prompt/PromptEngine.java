@@ -14,6 +14,9 @@ import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.service.LlmService;
+import jpabasic.truthaiserver.service.claude.ClaudeService;
+import jpabasic.truthaiserver.service.gpt.GptService;
+import jpabasic.truthaiserver.service.perplexity.PerplexityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,9 @@ public class PromptEngine {
     private final OptimizedTemplate optimizedTemplate;
     private final GeminiAdapter geminiAdapter;
     private final ClaudeAdapter claudeAdapter;
+    private final GptService gptService;
+    private final ClaudeService claudeService;
+    private final PerplexityService perplexityService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -78,26 +84,6 @@ public class PromptEngine {
     }
 
     //claude 실행
-
-    /**
-     *
-     * @param templateKey = "optimized"
-     * @param message = "유저 질문- user:"~?" "
-     * @param persona
-     * @param domain
-     * @return
-     */
-//    public String getOptimizedAnswerByClaude(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain){
-//        BasePromptTemplate template=registry.getByKey(templateKey);
-//        if(template==null){
-//            throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
-//        }
-//
-//
-//        ClaudeRequestDto dto=claudeAdapter.toClaudeRequest(message,persona,domain);
-//        return llmService.createClaudeAnswerWithPrompt(dto);
-//    }
-
     public LLMResponseDto getStructuredAnswerByClaude(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain) throws JsonProcessingException {
         BasePromptTemplate template=registry.getByKey(templateKey);
         if(template==null){
@@ -108,22 +94,39 @@ public class PromptEngine {
         System.out.println("🍪 여기 까지 성공");
 
         //Claude 호출 및 structured JSON 결과 파싱
-        LLMResponseDto dto=llmService.structuredWithClaude(result);
+        LLMResponseDto dto=claudeService.structuredWithClaude(result);
 
         return dto;
     }
+
+    public LLMResponseDto getStructuredAnswerByPerplexity(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain) throws JsonProcessingException {
+        BasePromptTemplate template=registry.getByKey(templateKey);
+        System.out.println("template:"+template);
+        if(template==null){
+            throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
+        }
+
+        List<Message> result=executeInternal(templateKey,message,persona,domain);
+        System.out.println("🍪 여기 까지 성공");
+
+        //Perplexity 호출 및 structured JSON 결과 파싱
+        LLMResponseDto dto=perplexityService.structuredWithPerplexity(result);
+
+        return dto;
+    }
+
 
     //gpt 실행
     public String getOptimizedAnswerByGpt(String templateKey, Message message, @Nullable String persona, @Nullable PromptDomain domain){
         //templateKey에 맞는 template 호출 -> gpt에 request 보낼 수 있는 형태로 리턴
         List<Message> result=executeInternal(templateKey,message,persona,domain);
-        return llmService.createGptAnswerWithPrompt(result);
+        return gptService.createGptAnswerWithPrompt(result);
     }
 
     public LLMResponseDto getStructuredAnswerByGpt(String templateKey, Message message, @Nullable String persona, @Nullable PromptDomain domain) throws JsonProcessingException {
         List<Message> result=executeInternal(templateKey,message,persona,domain);
         System.out.println("🤨result:"+result.toString());
-        return llmService.structuredWithGpt(result);
+        return gptService.structuredWithGpt(result);
     }
 
 

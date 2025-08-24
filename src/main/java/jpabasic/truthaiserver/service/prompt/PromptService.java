@@ -108,46 +108,42 @@ public class PromptService {
         return promptEngine.execute("summarize",prompt);
     }
 
-//    //최적화 프롬프트 생성
-//    public String optimizingPrompt(String prompt,String persona,PromptDomain domain){
-//        return promptEngine.execute("editable",prompt,persona,domain);
-//    }
 
-    public List<Map<LLMModel,LLMResponseDto>> runByModel(LlmRequestDto request){
-        Map<LLMModel,?> answer=request.getModels().stream()
+    @Transactional
+    public List<Map<LLMModel, LLMResponseDto>> runByModel(LlmRequestDto request) {
+        Message msg = new Message(request.getQuestion());
+        String persona = request.getPersona();
+        PromptDomain domain = request.getPromptDomain();
+
+        Map<LLMModel, LLMResponseDto> answer = request.getModels().stream()
                 .map(LLMModel::fromString)
-                .collect(toMap(
+                .collect(Collectors.toMap(
                         Function.identity(),
-                        (LLMModel model)->switch(model) {
-                            case GPT -> {
-                                try {
-                                    yield promptEngine.getStructuredAnswerByGpt("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            case CLAUDE -> {
-                                try {
-                                    yield promptEngine.getStructuredAnswerByClaude("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            case GEMINI -> {
-                                try {
-                                    yield promptEngine.getStructuredAnswerByClaude("optimized", new Message(request.getQuestion()), request.getPersona(), request.getPromptDomain());
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            case PERPLEXITY -> null;
-                        },
-                        (a,b)->a,
-                        ()->new EnumMap<>(LLMModel.class)));
+                        model -> invokeEngine(model, request.getTemplateKey(), msg, persona, domain),
+                        (a, b) -> a,
+                        () -> new EnumMap<>(LLMModel.class)
+                ));
 
-
-                return List.of((Map<LLMModel, LLMResponseDto>) answer);
+        return List.of(answer);
     }
+
+
+    private LLMResponseDto invokeEngine(
+            LLMModel model, String templateKey, Message msg, String persona, PromptDomain domain) {
+
+        try {
+            return switch (model) {
+                case GPT        -> promptEngine.getStructuredAnswerByGpt(templateKey, msg, persona, domain);
+                case CLAUDE     -> promptEngine.getStructuredAnswerByClaude(templateKey, msg, persona, domain);
+                case GEMINI     -> null;
+                case PERPLEXITY -> promptEngine.getStructuredAnswerByPerplexity(templateKey, msg, persona, domain);
+            };
+        } catch (JsonProcessingException e) {
+            // 필요에 따라 로깅 추가
+            throw new RuntimeException("Failed to parse JSON for model: " + model, e);
+        }
+    }
+
 
 
 
@@ -160,22 +156,6 @@ public class PromptService {
 
         return optimizedPrompt;
     }
-
-    //수정할 수 있는 최적화된 프롬프트 반환
-    //최적화된 프롬프트 반환
-//    public List<Message> getNewOptimizedPrompt(OptPromptRequestDto dto,Long promptId) {
-////        Long promptId=saveOriginalPrompt(dto,user);
-//        String templateKey=dto.getTemplateKey();
-//
-//        List<Message> optimizedPrompt=promptEngine.getOptimizedPrompt(templateKey,dto);
-//
-//        //db에 저장은 String type으로 ? -> List<Message>로 수정할수도.
-//        String optimizedPromptSt=optimizedPrompt.toString();
-//        saveOptimizedPrompt(optimizedPromptSt,promptId);
-//
-//        return optimizedPrompt;
-//    }
-
 
 
 
