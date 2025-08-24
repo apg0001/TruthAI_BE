@@ -83,7 +83,8 @@ dependencies {
     implementation 'com.anthropic:anthropic-java:2.5.1'
     implementation 'com.anthropic:anthropic-java-client-okhttp:2.5.1'
 
-
+    // crwaling
+    implementation 'org.jsoup:jsoup:1.17.2'
 }
 
 

@@ -151,6 +151,45 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository; // ✅ User 조회 위해 주입
 
+//    @Override
+//    protected void doFilterInternal(
+//            HttpServletRequest request,
+//            HttpServletResponse response,
+//            FilterChain filterChain
+//    ) throws ServletException, IOException {
+//
+//        // 이미 인증되어 있으면 패스
+//        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+//            String token = jwtService.extractToken(request);
+//
+//            if (token != null && jwtService.validateAccessToken(token)) {
+//                Long userId = jwtService.getUserIdByParseToken(token);
+//
+//                Optional<User> userOpt = userRepository.findById(userId);
+//                if (userOpt.isPresent()) {
+//                    User user = userOpt.get();
+//
+//                    // ✅ 엔티티 포함한 UserDetails
+//                    CustomUserDetails principal = new CustomUserDetails(user);
+//
+//                    UsernamePasswordAuthenticationToken authentication =
+//                            new UsernamePasswordAuthenticationToken(
+//                                    principal,
+//                                    null,
+//                                    principal.getAuthorities()
+//                            );
+//                    authentication.setDetails(
+//                            new WebAuthenticationDetailsSource().buildDetails(request)
+//                    );
+//
+//                    SecurityContextHolder.getContext().setAuthentication(authentication);
+//                }
+//            }
+//        }
+//
+//        filterChain.doFilter(request, response);
+//    }
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -162,28 +201,44 @@ public class JwtFilter extends OncePerRequestFilter {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String token = jwtService.extractToken(request);
 
-            if (token != null && jwtService.validateAccessToken(token)) {
-                Long userId = jwtService.getUserIdByParseToken(token);
-
-                Optional<User> userOpt = userRepository.findById(userId);
-                if (userOpt.isPresent()) {
-                    User user = userOpt.get();
-
-                    // ✅ 엔티티 포함한 UserDetails
-                    CustomUserDetails principal = new CustomUserDetails(user);
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    principal,
-                                    null,
-                                    principal.getAuthorities()
+            if (token != null) {
+                try {
+                    if (jwtService.validateAccessToken(token)) {
+                        // 🔥 토큰이 유효한 경우
+                        Long userId = jwtService.getUserIdByParseToken(token);
+                        Optional<User> userOpt = userRepository.findById(userId);
+                        if (userOpt.isPresent()) {
+                            User user = userOpt.get();
+                            CustomUserDetails principal = new CustomUserDetails(user);
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(
+                                            principal, null, principal.getAuthorities()
+                                    );
+                            authentication.setDetails(
+                                    new WebAuthenticationDetailsSource().buildDetails(request)
                             );
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    } else {
+                        // �� 토큰이 만료되었거나 유효하지 않은 경우
+                        response.setStatus(401);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\",\"code\":\"TOKEN_EXPIRED\"}");
+                        return;
+                    }
+                } catch (Exception e) {
+                    // �� 토큰 파싱 실패 등 예외 발생 시
+                    response.setStatus(401);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\",\"code\":\"INVALID_TOKEN\"}");
+                    return;
                 }
+            } else {
+                // 🔥 토큰이 없는 경우
+                response.setStatus(401);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"TOKEN_REQUIRED\",\"message\":\"인증 토큰이 필요합니다.\",\"code\":\"TOKEN_REQUIRED\"}");
+                return;
             }
         }
 
