@@ -95,11 +95,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/**",
                                 "/google-test.html",
-                                "/swagger-ui/**"
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                // 🔥 이 부분 추가
+                // 이 부분 추가
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
