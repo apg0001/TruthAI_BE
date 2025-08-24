@@ -66,17 +66,52 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+//                .authorizeHttpRequests(auth -> auth
+//                                // api 테스트 위해서 모든 권한 열어둠
+////                                .anyRequest().permitAll()
+//                        // 실제 배포 시 swagger랑 로그인만 열어둠
+//                        .requestMatchers(
+//                                "/auth/**",
+//                                "/google-test.html",
+//                                "/swagger-ui/**"
+//                        ).permitAll()
+//                        .anyRequest().authenticated()
+//                )
+//
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .headers((headers -> headers
+//                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+//                )
+//                .build();
+//    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                                // api 테스트 위해서 모든 권한 열어둠
-                                .anyRequest().permitAll()
-                        // 실제 배포 시 swagger랑 로그인만 열어둠
-//                        .requestMatchers("/api/auth", "/swagger-ui/**").permitAll()
-//                        .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/auth/**",
+                                "/google-test.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
-
+                // 🔥 이 부분 추가
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\",\"code\":\"TOKEN_EXPIRED\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\":\"ACCESS_DENIED\",\"message\":\"접근 권한이 없습니다.\",\"code\":\"ACCESS_DENIED\"}");
+                        })
+                )
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers((headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
