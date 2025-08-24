@@ -57,13 +57,14 @@ public class PromptService {
             throw new BusinessException(ErrorMessages.MESSAGE_NULL_ERROR);
         }
 
-        //LlmAnswerDto -> Answer
+        //LlmAnswerDto -> Answer (prompt와 user는 Prompt 생성자에서 설정됨)
         List<Answer> answers = results.stream()
                 .map(dto -> dto.toEntity())
                 .toList();
 
         Long promptId;
         try {
+            // Prompt 생성 시 생성자에서 각 Answer의 prompt와 user 관계를 자동 설정
             Prompt prompt = new Prompt(question, answers, user, summary);
             promptId = promptRepository.save(prompt).getId();
 

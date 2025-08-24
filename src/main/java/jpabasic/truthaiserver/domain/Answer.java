@@ -32,6 +32,9 @@ public class Answer extends BaseEntity{
     @Column(name = "score")
     private Float score;
 
+    @Column(name = "level")
+    private Integer level;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prompt_id")
     private Prompt prompt;
@@ -47,9 +50,9 @@ public class Answer extends BaseEntity{
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL)
     private List<Claim> claims = new ArrayList<>();
 
-    public void updateOpinionAndScore(String opinion, Float score) {
-        this.opinion = opinion;
+    public void updateScoreAndLevel(Float score, Integer level) {
         this.score = score;
+        this.level = level;
     }
   
     public Answer(LLMModel model,String answer){
@@ -61,6 +64,16 @@ public class Answer extends BaseEntity{
         this.content = content;
         this.model = model;
         this.prompt = prompt;
+        this.user = user;
+    }
+
+
+    // 양방향 관계 설정을 위한 setter 메서드들
+    public void setPrompt(Prompt prompt) {
+        this.prompt = prompt;
+    }
+
+    public void setUser(User user) {
         this.user = user;
     }
 

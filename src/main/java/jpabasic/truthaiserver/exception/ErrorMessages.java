@@ -2,7 +2,7 @@ package jpabasic.truthaiserver.exception;
 
 public class ErrorMessages {
     public static final String Invalid_Token = "유효하지 않은 토큰입니다.";
-    public static final String REGISTRATION_FAILED = "사용자 등록에 실패했습니다."; // ✅ 이 줄 추가
+    public static final String REGISTRATION_FAILED = "사용자 등록에 실패했습니다.";
     public static final String USER_NULL_ERROR="해당 유저를 찾을 수 없어요.";
     
     //llm answer 관련
