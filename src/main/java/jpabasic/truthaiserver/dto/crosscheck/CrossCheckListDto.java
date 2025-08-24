@@ -10,6 +10,6 @@ public class CrossCheckListDto {
     private Long promptId;
     private String model;        // GPT / CLAUDE / ...
     private String content;
-    private String opinion;      // 환각 가능성 등
+    private Integer level;       // 환각 레벨 (0: 낮음, 1: 중간, 2: 높음)
     private Float score;         // Answer에 저장된 최종 점수
 }

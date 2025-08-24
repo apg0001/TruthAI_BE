@@ -26,7 +26,7 @@ public class FolderController {
     }
 
     // 폴더 조회
-    @GetMapping("/{folderType}")
+    @GetMapping("/folderList/{folderType}")
     @Operation(summary = "폴더 목록 조회")
     public List<FolderSummaryResponse> getPromptList(@AuthenticationPrincipal(expression = "user") User user,
                                                      @PathVariable String folderType) {
@@ -49,11 +49,10 @@ public class FolderController {
         folderService.renameFolder(folderId, request.getName());
     }
 
-    @GetMapping("/{folderId}/{type}")
+    @GetMapping("/promptList/{folderId}")
     @Operation(summary = "폴더 내 프롬프트 목록 조회", description = "folderId 폴더에 저장된 프롬프트 리스트를 반환합니다.")
     public List<PromptListResponse> getPromptsInForder(
-            @PathVariable Long folderId,
-            @PathVariable String type
+            @PathVariable Long folderId
     ){
         return folderService
                 .getPromptsInFolder(folderId);

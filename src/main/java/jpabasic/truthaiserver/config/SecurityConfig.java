@@ -96,22 +96,10 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/google-test.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
-                )
-                // 이 부분 추가
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(401);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\",\"code\":\"TOKEN_EXPIRED\"}");
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setStatus(403);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\":\"ACCESS_DENIED\",\"message\":\"접근 권한이 없습니다.\",\"code\":\"ACCESS_DENIED\"}");
-                        })
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers((headers -> headers
