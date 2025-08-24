@@ -13,7 +13,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000","http://localhost:5173") // 프론트 주소
+                        .allowedOrigins("http://localhost:3000","http://localhost:5173","https://truth-ai-two.vercel.app") // 프론트 주소
                         .allowedMethods("*")
                         .allowCredentials(true);
             }
