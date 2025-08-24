@@ -1,49 +1,3 @@
-//package jpabasic.truthaiserver.config;
-//
-//import jpabasic.truthaiserver.jwt.JwtFilter;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.beans.factory.annotation.Configurable;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-//import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-//import org.springframework.security.web.SecurityFilterChain;
-//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-//
-//@EnableWebSecurity
-//@Configuration
-//@Slf4j
-//public class SecurityConfig {
-//    @Autowired
-//    private JwtFilter jwtFilter;
-//
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-//                .authorizeHttpRequests(auth -> auth
-//                        // 공개 엔드포인트 (인증 불필요)
-//                        .requestMatchers(
-//                                "/auth/login",
-//                                "/auth/token/refresh",
-//                                "/swagger-ui/**",
-//                                "/v3/api-docs/**",
-//                                "/error"
-//                        ).permitAll()
-//                        // 나머지 모든 요청은 인증 필요
-//                        .anyRequest().authenticated()
-//                )
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .headers((headers -> headers
-//                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-//                )
-//                .build();
-//    }
-//}
-
-
 package jpabasic.truthaiserver.config;
 
 import jpabasic.truthaiserver.jwt.JwtFilter;
@@ -71,31 +25,12 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-//                .authorizeHttpRequests(auth -> auth
-//                                // api 테스트 위해서 모든 권한 열어둠
-////                                .anyRequest().permitAll()
-//                        // 실제 배포 시 swagger랑 로그인만 열어둠
-//                        .requestMatchers(
-//                                "/auth/**",
-//                                "/google-test.html",
-//                                "/swagger-ui/**"
-//                        ).permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .headers((headers -> headers
-//                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-//                )
-//                .build();
-//    }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        return http
+                .cors(cors -> {}) // ✅ Security에서 CORS 활성화 (중요)
+                .csrf(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**",
@@ -106,26 +41,23 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers((headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                )
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .build();
     }
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        // 자격증명 쓰면 '*' 금지 → 정확한 오리진만 나열
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "http://localhost:5173",
-                "https://truth-ai-two.vercel.app"   // 실제 프론트 도메인 추가
+                "https://truth-ai-two.vercel.app"
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));           // Authorization 등 허용
+        config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization","Location"));
-        config.setAllowCredentials(true);                 // 쿠키/Authorization 허용
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
