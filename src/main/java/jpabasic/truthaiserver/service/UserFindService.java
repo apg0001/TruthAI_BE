@@ -24,8 +24,8 @@ public class UserFindService {
 
 
     @Transactional
-    public PersonaResponse setPersona(PersonaRequest personaRequest,User user) {
-        System.out.println(user.getUserBaseInfo());
+    public PersonaResponse setPersona(PersonaRequest personaRequest,Long userId) {
+        User user=userRepository.findById(userId).orElseThrow(()->new BusinessException(USER_NULL_ERROR));
 
         user.getUserBaseInfo().updatePersona(personaRequest.persona());
         userRepository.save(user); // 🤨

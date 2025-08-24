@@ -65,10 +65,10 @@ public class UserController {
     @Operation(summary = "유저 페르소나 기본 설정")
     public ResponseEntity<PersonaResponse> setPersona(
             @RequestBody PersonaRequest req,
-            @AuthenticationPrincipal CustomUserDetails me){
+            @AuthenticationPrincipal(expression = "user") User user){
 
-        User user=me.getUser();
-        PersonaResponse res=userFindService.setPersona(req, user);
+        Long userId=user.getId();
+        PersonaResponse res=userFindService.setPersona(req, userId);
 
         return ResponseEntity.ok(res);
     }
@@ -78,7 +78,10 @@ public class UserController {
     @Operation(summary = "유저 기본 설정한 페르소나 조회")
     public ResponseEntity<PersonaResponse> getPersona(@AuthenticationPrincipal(expression = "user") User user){
 
-        String persona=user.getUserBaseInfo().getPersona();
+        Long userId=user.getId();
+        User me=userRepository.findById(userId).orElseThrow(()->new BusinessException(USER_NULL_ERROR));
+
+        String persona=me.getUserBaseInfo().getPersona();
         PersonaResponse res=new PersonaResponse(persona);
         return ResponseEntity.ok(res);
     }
