@@ -34,7 +34,7 @@ public class CrossCheckController {
             summary = "교차검증 결과 리스트",
             description = "프롬프트 ID에 해당하는 교차검증 결과 리스트를 조회합니다."
     )
-    public List<CrossCheckListDto> getCrossCheckList(
+    public CrossCheckResponseDto getCrossCheckList(
             @PathVariable("promptId") Long promptId
     ) {
         return crossCheckService.getCrossChecklist(promptId);

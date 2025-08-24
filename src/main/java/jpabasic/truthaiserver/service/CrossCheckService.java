@@ -460,19 +460,83 @@ public class CrossCheckService {
     }
 
     @Transactional(readOnly = true)
-    public List<CrossCheckListDto> getCrossChecklist(Long promptId) {
+    public CrossCheckResponseDto getCrossChecklist(Long promptId) {
         List<Answer> answers = answerRepository.findByPromptId(promptId);
+        
+        if (answers.isEmpty()) {
+            return new CrossCheckResponseDto(
+                    null, null, null, null, null, null
+            );
+        }
 
-        return answers.stream()
-                .map(answer -> new CrossCheckListDto(
-                        answer.getId(),
-                        answer.getPrompt().getId(),
-                        answer.getModel().name(),
-                        answer.getContent(),
-                        answer.getLevel(),
-                        answer.getScore()
+        // 프롬프트 정보로 coreTitle 설정
+        String coreTitle = null;
+        if (answers.get(0).getPrompt() != null) {
+            var prompt = answers.get(0).getPrompt();
+            coreTitle = (prompt.getSummary() != null && !prompt.getSummary().isBlank())
+                    ? prompt.getSummary() : prompt.getOriginalPrompt();
+        }
+
+        // coreStatement는 가장 높은 점수를 가진 답변의 첫 번째 문장으로 설정
+        String coreStatement = null;
+        Answer bestAnswer = answers.stream()
+                .filter(a -> a.getScore() != null)
+                .max(Comparator.comparing(Answer::getScore))
+                .orElse(null);
+        
+        if (bestAnswer != null && bestAnswer.getContent() != null) {
+            List<String> sentences = splitToSentences(bestAnswer.getContent());
+            if (!sentences.isEmpty()) {
+                coreStatement = sentences.get(0);
+            }
+        }
+
+        // 모델별 DTO 생성
+        CrossCheckModelDto gptDto = buildModelDtoFromAnswer("GPT", answers);
+        CrossCheckModelDto claudeDto = buildModelDtoFromAnswer("CLAUDE", answers);
+        CrossCheckModelDto geminiDto = buildModelDtoFromAnswer("GEMINI", answers);
+        CrossCheckModelDto perplexityDto = buildModelDtoFromAnswer("PERPLEXITY", answers);
+
+        return new CrossCheckResponseDto(
+                coreTitle,
+                coreStatement,
+                gptDto,
+                claudeDto,
+                geminiDto,
+                perplexityDto
+        );
+    }
+
+    /**
+     * 저장된 Answer 데이터로부터 CrossCheckModelDto 생성
+     */
+    private CrossCheckModelDto buildModelDtoFromAnswer(String modelName, List<Answer> answers) {
+        Answer answer = answers.stream()
+                .filter(a -> a.getModel().name().equals(modelName))
+                .findFirst()
+                .orElse(null);
+
+        if (answer == null) return null;
+
+        // 출처 정보 조회
+        List<Source> sources = sourceRepository.findByAnswerId(answer.getId());
+        List<CrossCheckReferenceDto> references = sources.stream()
+                .map(s -> new CrossCheckReferenceDto(
+                        s.getSourceTitle(),
+                        s.getSourceSummary(),
+                        s.getSourceUrl()
                 ))
                 .collect(Collectors.toList());
+
+        // 저장된 점수와 레벨 사용
+        Float score = answer.getScore();
+        double scoreValue = score != null ? score : 0.0;
+        int similarityPercent = (int) Math.round(Math.max(0.0, Math.min(1.0, scoreValue)) * 100.0);
+        
+        Integer level = answer.getLevel();
+        int hallucinationLevel = level != null ? level : 2;
+
+        return new CrossCheckModelDto(hallucinationLevel, similarityPercent, references);
     }
 
     @Transactional
