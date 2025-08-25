@@ -7,10 +7,12 @@ import jpabasic.truthaiserver.domain.PromptDomain;
 import jpabasic.truthaiserver.dto.answer.LlmRequestDto;
 import jpabasic.truthaiserver.dto.answer.Message;
 import jpabasic.truthaiserver.dto.answer.gemini.GeminiRequestDto;
+import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.prompt.*;
 import jpabasic.truthaiserver.dto.prompt.adapter.ClaudeAdapter;
 import jpabasic.truthaiserver.dto.prompt.adapter.GeminiAdapter;
 import jpabasic.truthaiserver.dto.prompt.template.BasePromptTemplate;
+import jpabasic.truthaiserver.dto.sources.SourcesDto;
 import jpabasic.truthaiserver.exception.BusinessException;
 import jpabasic.truthaiserver.exception.ErrorMessages;
 import jpabasic.truthaiserver.service.LlmService;
@@ -22,7 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -132,15 +138,42 @@ public class PromptEngine {
 
 
     //gemini 실행
-    public String getOptimizedAnswerByGemini(String templateKey, Message message, @Nullable String persona,@Nullable PromptDomain domain){
-        //"optimized" 프롬프트 가져오기
-        BasePromptTemplate template=registry.getByKey(templateKey);
-        if(template==null){
-            throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
-        }
+    public LLMResponseDto getStructuredAnswerByGemini(String templateKey, Message message, @Nullable String persona, @Nullable PromptDomain domain){
+
+//        //"optimized" 프롬프트 가져오기
+//        BasePromptTemplate template=registry.getByKey(templateKey);
+//        System.out.println("");
+//        if(template==null){
+//            throw new BusinessException(ErrorMessages.PROMPT_TEMPLATE_NOT_FOUND);
+//        }
 
         GeminiRequestDto dto=geminiAdapter.toGeminiRequest(message,persona,domain);
-        return llmService.createGeminiAnswerWithPrompt(dto);
+        System.out.println("✅request:"+dto);
+        GeminiResponseDto result= llmService.geminiClient(dto);
+
+        String answer=result.getCandidates().get(0)
+                .getContent()
+                .getParts().get(0)
+                .getText();
+        System.out.println("✅answer:"+answer);
+
+        // List<Web> 반환
+        List<GeminiResponseDto.Web> webs =
+                Optional.ofNullable(result.getCandidates()).orElse(List.of()).stream()
+                        .map(GeminiResponseDto.Candidate::getGroundingMetadata)
+                        .filter(Objects::nonNull)
+                        .flatMap(gm -> Optional.ofNullable(gm.getGroundingChunks()).orElse(List.of()).stream())
+                        .map(GeminiResponseDto.GroundingChunk::getWeb)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+
+        System.out.println("✅ webs: " + webs);
+
+
+        List<LLMResponseDto.SourceResponseDto> sources=LLMResponseDto.toSourceResponseDto(webs);
+        System.out.println("✅sources:"+sources.toString());
+        LLMResponseDto response=new LLMResponseDto(answer,sources);
+        return response;
     }
 
 

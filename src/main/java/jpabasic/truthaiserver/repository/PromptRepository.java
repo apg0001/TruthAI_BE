@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface PromptRepository extends JpaRepository<Prompt, Long> {
     Optional<Prompt> findByIdAndUserId(Long id, Long userId);
     List<Prompt> findByFolderIdOrderByCreatedAtDesc(Long folderId);
+
+    @Query("SELECT p FROM Prompt p WHERE p.user.id=:userId AND p.optimizedPrompt IS NOT NULL ORDER BY p.createdAt DESC")
     List<Prompt> findTop5ByUser_IdOrderByCreatedAtDesc(Long userId);
 
     @Query("SELECT p FROM Prompt p WHERE p.user.id = :userId AND p.optimizedPrompt IS NOT NULL")

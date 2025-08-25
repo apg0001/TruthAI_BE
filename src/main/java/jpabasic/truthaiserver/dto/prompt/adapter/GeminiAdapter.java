@@ -9,9 +9,17 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class GeminiAdapter extends BasePromptTemplate {
+
+
+    @Override
+    public String fewShotExamples(Map<String,Object> vars){
+        return null;
+    }
+
 
     //Gemini 용으로 재구성
     public GeminiRequestDto toGeminiRequest(
@@ -36,12 +44,6 @@ public class GeminiAdapter extends BasePromptTemplate {
             systemBlocks.add(domainExtra);
         }
 
-        //few-shot도 선택사항
-        String fewshot = fewShotExamples(new HashMap<>());
-        if (!fewshot.isBlank()) {
-            systemBlocks.add(fewshot);
-        }
-
         GeminiRequestDto.SystemInstruction sys= GeminiRequestDto.SystemInstruction.ofTexts(systemBlocks);
 
         //2. message 구성
@@ -59,7 +61,10 @@ public class GeminiAdapter extends BasePromptTemplate {
         GeminiRequestDto.GenerationConfig gen=
                 new GeminiRequestDto.GenerationConfig(1024,0.0,null);
 
-        return new GeminiRequestDto(sys,contents,gen);
+        GeminiRequestDto dto= new GeminiRequestDto(sys,contents,gen);
+        GeminiRequestDto request= GeminiRequestDto.toGoogleSearch(dto);
+
+        return request;
     }
 
 

@@ -1,5 +1,6 @@
 package jpabasic.truthaiserver.dto.prompt;
 
+import jpabasic.truthaiserver.dto.answer.gemini.GeminiResponseDto;
 import jpabasic.truthaiserver.dto.answer.perplexity.PerplexityResponseDto;
 
 import java.util.List;
@@ -13,6 +14,12 @@ public record LLMResponseDto(
     public static List<SourceResponseDto> toSourceResponseDto(PerplexityResponseDto dto) {
         return dto.getSearchResults().stream()
                 .map(m->new SourceResponseDto(m.getTitle(), m.getUrl()))
+                .toList();
+    }
+
+    public static List<SourceResponseDto> toSourceResponseDto(List<GeminiResponseDto.Web> dtos) {
+        return dtos.stream()
+                .map(web->new SourceResponseDto(web.getTitle(),web.getUri()))
                 .toList();
     }
 

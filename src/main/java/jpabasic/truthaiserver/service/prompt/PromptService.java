@@ -137,8 +137,8 @@ public class PromptService {
             return switch (model) {
                 case GPT        -> promptEngine.getStructuredAnswerByGpt(templateKey, msg, persona, domain);
                 case CLAUDE     -> promptEngine.getStructuredAnswerByClaude(templateKey, msg, persona, domain);
-                case GEMINI     -> null;
-                case PERPLEXITY -> promptEngine.getStructuredAnswerByPerplexity(templateKey, msg, persona, domain);
+                case GEMINI     -> promptEngine.getStructuredAnswerByGemini(templateKey,msg,persona,domain);
+                case PERPLEXITY -> promptEngine.getStructuredAnswerByPerplexity("perplexity", msg, persona, domain);
             };
         } catch (JsonProcessingException e) {
             // 필요에 따라 로깅 추가
