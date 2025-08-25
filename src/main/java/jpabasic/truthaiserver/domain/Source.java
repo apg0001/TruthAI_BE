@@ -14,6 +14,7 @@ public class Source {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String sourceUrl;
 
     private String sourceTitle;
