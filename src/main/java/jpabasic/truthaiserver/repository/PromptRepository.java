@@ -24,7 +24,6 @@ public interface PromptRepository extends JpaRepository<Prompt, Long> {
     @Query("SELECT p FROM Prompt p " +
             "JOIN p.answers a " +
             "WHERE p.user.id = :userId " +
-            "AND p.optimizedPrompt IS NOT NULL " +
             "AND a.score IS NOT NULL")
     List<Prompt> findPromptsWithAnswersAndScoreNotNull(@Param("userId") Long userId);
 
