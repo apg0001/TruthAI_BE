@@ -75,7 +75,13 @@ public class LlmService {
     public String createGeminiAnswer(String question) {
         GeminiRequestDto request = GeminiRequestDto.send(question);
         System.out.println("🏃GeminiRequestDto:" + request);
-        return geminiClient(request);
+        GeminiResponseDto answer=geminiClient(request);
+
+        String result=answer.getCandidates().get(0)
+                .getContent()
+                .getParts().get(0)
+                .getText();
+        return result;
     }
 
     public String createPerplexityAnswer(String question){
@@ -91,9 +97,6 @@ public class LlmService {
 
 
 
-    public String createGeminiAnswerWithPrompt(GeminiRequestDto request) {
-        return geminiClient(request);
-    }
 
 
 
@@ -102,7 +105,7 @@ public class LlmService {
 
 
 
-    public String geminiClient(GeminiRequestDto request) {
+    public GeminiResponseDto geminiClient(GeminiRequestDto request) {
 
         GeminiResponseDto response = WebClient.builder()
                 .baseUrl("https://generativelanguage.googleapis.com/v1beta")
@@ -116,11 +119,7 @@ public class LlmService {
                 .bodyToMono(GeminiResponseDto.class)
                 .block();
 
-        return response
-                .getCandidates().get(0)
-                .getContent()
-                .getParts().get(0)
-                .getText();
+        return response;
 
     }
 
