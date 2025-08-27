@@ -2,6 +2,8 @@ package jpabasic.truthaiserver.service;
 
 import jpabasic.truthaiserver.domain.Prompt;
 import jpabasic.truthaiserver.dto.prompt.sidebar.SideBarPromptListDto;
+import jpabasic.truthaiserver.exception.BusinessException;
+import jpabasic.truthaiserver.exception.ErrorMessages;
 import org.springframework.transaction.annotation.Transactional;
 import jpabasic.truthaiserver.domain.Answer;
 import jpabasic.truthaiserver.domain.Claim;
@@ -543,10 +545,18 @@ public class CrossCheckService {
     //사이드바 리스트 조회
     public List<SideBarPromptListDto> checkSideBar(Long userId){
 
-        List<Prompt> list=promptRepository.findPromptsWithAnswersAndScoreNull(userId, PageRequest.of(0, 5));
+//        List<Prompt> list = answerRepository.findAllPromptIdsByUserId(US);
+
+        List<Long> promptIdList = answerRepository.findAllPromptIdsByUserId(userId,PageRequest.of(0,5));
+        List<Prompt> prompts=promptIdList.stream()
+                .map(id->promptRepository.findById(id)
+                        .orElseThrow(()->new BusinessException(ErrorMessages.PROMPT_NOT_FOUND)))
+                .toList();
+        System.out.println("🥺prompts:"+prompts);
+
         List<SideBarPromptListDto> dtoList=new ArrayList<>();
 
-        for(Prompt one:list){
+        for(Prompt one:prompts){
             dtoList.add(SideBarPromptListDto.toDto(one));
         }
         return dtoList;
